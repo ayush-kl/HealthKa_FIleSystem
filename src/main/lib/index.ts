@@ -1,15 +1,3 @@
-
-export const createInvoice = async (data: any = {}) => {
-  
-};
-export const deleteInvoice = async (data: any = {}) => {
-  
-};
-
-export const readInvoice = async (data: any = {}) => {
-  
-};
-
 import { ensureDir, readFile, writeFile } from 'fs-extra';
 import { homedir } from 'os';
 import path from 'path';
@@ -20,6 +8,8 @@ const fileEncoding = 'utf-8';
 const appDirectoryName = 'dawaiInvoices';
 
 export const getRootDir = () => path.join(homedir(), appDirectoryName);
+
+/* ---------------------- FOLDER + FILE HELPERS ---------------------- */
 
 const getMonthFolderName = (date = new Date()) => {
   const month = String(date.getMonth() + 1).padStart(2, '0');
@@ -34,8 +24,124 @@ const getDateFileName = (date = new Date()) => {
 };
 
 const getInvoiceFilePath = (date = new Date()) => {
-  return path.join(getRootDir(), getMonthFolderName(date), getDateFileName(date));
+  return path.join(
+    getRootDir(),
+    getMonthFolderName(date),
+    getDateFileName(date)
+  );
 };
+
+/* =================================================================== */
+/* -------------------------- CREATE INVOICE -------------------------- */
+/* =================================================================== */
+
+export const createInvoice = async () => {
+  const id = "INV-" + Date.now(); // unique ID
+  const root = getRootDir();
+  const file = getInvoiceFilePath();
+
+  await ensureDir(path.dirname(file));
+
+  let invoices: any[] = [];
+  try {
+    const content = await readFile(file, { encoding: fileEncoding });
+    invoices = JSON.parse(content);
+  } catch {
+    invoices = [];
+  }
+
+  const newInvoice = {
+    id,
+    createdAt: Date.now(),
+  };
+
+  invoices.push(newInvoice);
+  await writeFile(file, JSON.stringify(invoices, null, 2), { encoding: fileEncoding });
+
+  return id; // important: frontend expects id
+};
+
+/* =================================================================== */
+/* -------------------------- READ INVOICE ---------------------------- */
+/* =================================================================== */
+
+export const readInvoice = async (invoiceId: string) => {
+  try {
+    const root = getRootDir();
+    const monthDirs = readdirSync(root).filter((entry) =>
+      statSync(path.join(root, entry)).isDirectory()
+    );
+
+    for (const folder of monthDirs) {
+      const folderPath = path.join(root, folder);
+      const files = readdirSync(folderPath).filter((f) => f.endsWith(".json"));
+
+      for (const file of files) {
+        const filePath = path.join(folderPath, file);
+        try {
+          const content = await readFile(filePath, { encoding: fileEncoding });
+          const invoices = JSON.parse(content);
+
+          const found = invoices.find((inv: any) => inv.id === invoiceId);
+          if (found) return found;
+
+        } catch (error) {
+          console.error("Failed to read invoice:", error);
+        }
+      }
+    }
+
+    return null;
+  } catch (err) {
+    console.error("Error reading invoice:", err);
+    return null;
+  }
+};
+
+/* =================================================================== */
+/* -------------------------- DELETE INVOICE -------------------------- */
+/* =================================================================== */
+
+export const deleteInvoice = async (invoiceId: string) => {
+  const root = getRootDir();
+  const monthDirs = readdirSync(root).filter((entry) =>
+    statSync(path.join(root, entry)).isDirectory()
+  );
+
+  for (const folder of monthDirs) {
+    const folderPath = path.join(root, folder);
+    const files = readdirSync(folderPath).filter((f) => f.endsWith(".json"));
+
+    for (const file of files) {
+      const filePath = path.join(folderPath, file);
+
+      try {
+        const content = await readFile(filePath, { encoding: fileEncoding });
+        let invoices = JSON.parse(content);
+
+        const before = invoices.length;
+        invoices = invoices.filter((inv: any) => inv.id !== invoiceId);
+
+        if (invoices.length !== before) {
+          await writeFile(
+            filePath,
+            JSON.stringify(invoices, null, 2),
+            { encoding: fileEncoding }
+          );
+          return true;
+        }
+      } catch (error) {
+        continue;
+      }
+    }
+  }
+
+  return false; // not found
+};
+
+/* =================================================================== */
+/* --------------------------- WRITE INVOICE --------------------------- */
+/* =================================================================== */
 
 export const writeInvoice = async (id: string, content: string) => {
   const root = getRootDir();
@@ -72,7 +178,7 @@ export const writeInvoice = async (id: string, content: string) => {
     }
   }
 
-  // Not found, add to today’s file
+  // Not found, add new
   const todayFile = getInvoiceFilePath();
   await ensureDir(path.dirname(todayFile));
   let invoices: any[] = [];
@@ -86,6 +192,10 @@ export const writeInvoice = async (id: string, content: string) => {
   invoices.push({ id, ...parsedContent });
   await writeFile(todayFile, JSON.stringify(invoices, null, 2), { encoding: fileEncoding });
 };
+
+/* =================================================================== */
+/* --------------------------- GET INVOICES ---------------------------- */
+/* =================================================================== */
 
 export const getInvoices = async (
   dateStr?: string,

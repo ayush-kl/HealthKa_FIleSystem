@@ -1,296 +1,277 @@
-import React, { useState } from "react";
+import React, { useState } from 'react';
 import Logo from '../../../../../resources/icon.png';
 
-interface InvoiceItem {
-  item: string;
-  quantity: string;
-  hsn: string;
-  batch: string;
-  expiry: string;
-  mrp: string;
-  gst: string;
-  discount: string;
-  total: string;
-  checked?: boolean;
-}
-
-interface InvoiceData {
-  date: string;
-  invoiceNo: string;
-  companyName: string;
-  address: string;
-  city: string;
-  gstin: string;
-  dlNumber1: string;
-  dlNumber2: string;
+interface AppointmentData {
+  title?: string;
+  phoneNumber: string;
   patientName: string;
-  mobile: string;
-  patientAddress: string;
+  gender: string;
+  age: string;
   doctorName: string;
-  items: InvoiceItem[];
-  amountPaid: string;
-  totalDiscount: string;
+  specialization: string;
+  doctorSchedule: string;
+  appointmentDate: string;
+  appointmentTime: string;
+  location: string;
+  status: string;
+  member: boolean;
+  paidAmount: string;
+  discount: string;
+  consultationFee: string;
   totalBill: string;
   outstandingAmount: string;
   paymentStatus: string;
+  paymentMode: string;
   pin: string;
   fssai: string;
-  title?: string;
 }
 
-const EmptyInvoice: InvoiceData = {
-  date: '',
-  invoiceNo: '',
-  companyName: '',
-  address: '',
-  city: '',
-  gstin: '',
-  dlNumber1: '',
-  dlNumber2: '',
+const EmptyAppointment: AppointmentData = {
+  phoneNumber: '',
   patientName: '',
-  mobile: '',
-  patientAddress: '',
+  gender: '',
+  age: '',
   doctorName: '',
-  items: [
-    {
-      item: '',
-      quantity: '',
-      hsn: '',
-      batch: '',
-      expiry: '',
-      mrp: '',
-      gst: '',
-      discount: '',
-      total: ''
-    }
-  ],
-  amountPaid: '',
-  totalDiscount: '',
-  totalBill: '',
-  outstandingAmount: '',
-  paymentStatus: '',
+  specialization: '',
+  doctorSchedule: '',
+  appointmentDate: '',
+  appointmentTime: '',
+  location: '',
+  status: 'Pending',
+  member: false,
+  paidAmount: '0',
+  discount: '0',
+  consultationFee: '0',
+  totalBill: '0',
+  outstandingAmount: '0',
+  paymentStatus: 'Pending',
+  paymentMode: 'Cash',
   pin: '',
   fssai: ''
 };
 
-const InvoiceForm = ({
-  invoice,
-  onChange,
-  onSave
-}: {
-  invoice: InvoiceData;
-  onChange: (inv: InvoiceData) => void;
-  onSave: () => void;
-}) => {
-  const handleItemChange = (index: number, field: keyof InvoiceItem, value: string) => {
-    const updatedItems = invoice.items.map((item, i) =>
-      i === index ? { ...item, [field]: value } : item
-    );
-    onChange({ ...invoice, items: updatedItems });
-  };
+const Section: React.FC<{ title: string; children: any }> = ({ title, children }) => (
+  <div className="border border-gray-300 rounded-md p-4 shadow-sm mb-4 bg-white">
+    <h2 className="text-md font-semibold mb-3">{title}</h2>
+    <div className="grid grid-cols-2 gap-4">{children}</div>
+  </div>
+);
 
-  const handleFieldChange = (field: keyof InvoiceData, value: string) => {
-    onChange({ ...invoice, [field]: value });
+const InputField = ({
+  label,
+  value,
+  onChange,
+  type = "text",
+  placeholder = "",
+}: any) => (
+  <div>
+    <label className="text-xs font-semibold">{label}</label>
+    <input
+      type={type}
+      className="border px-2 py-1 rounded-md text-xs w-full mt-1"
+      placeholder={placeholder}
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+    />
+  </div>
+);
+
+const SelectField = ({
+  label,
+  value,
+  onChange,
+  options,
+}: any) => (
+  <div>
+    <label className="text-xs font-semibold">{label}</label>
+    <select
+      className="border px-2 py-1 rounded-md text-xs w-full mt-1"
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+    >
+      {options.map((op: string) => (
+        <option key={op}>{op}</option>
+      ))}
+    </select>
+  </div>
+);
+
+const AppointmentForm: React.FC<{
+  appointment: AppointmentData;
+  onChange: (a: AppointmentData) => void;
+  onSave: () => void;
+}> = ({ appointment, onChange, onSave }) => {
+
+  const handleChange = (field: keyof AppointmentData, value: string | boolean) => {
+    onChange({ ...appointment, [field]: value } as AppointmentData);
   };
 
   return (
-    <div className="border-2 border-gray-300 rounded-md w-full max-w-full p-4 mb-8">
-      <div className="text-[10px]">
-        <div className="text-center">
-          <h1 className="text-lg font-bold underline">Sales Invoice</h1>
+    <div className="border-2 border-gray-300 rounded-lg p-6 mb-6 shadow-md bg-gray-50">
+
+      {/* Header with Logo */}
+      <div className="flex justify-between items-center mb-4">
+        <h1 className="text-xl font-bold">Appointment Form</h1>
+        <div className="flex items-center gap-2">
+          <img src={Logo} width={55} height={55} />
+          <span className="font-semibold text-2xl">NEXUS</span>
+        </div>
+      </div>
+
+      {/* Section 1 — Patient Details */}
+      <Section title="Patient Details">
+        <InputField label="Phone Number*" placeholder="+91 XXXXX XXXXX" value={appointment.phoneNumber} onChange={(v:any)=>handleChange('phoneNumber',v)} />
+        <InputField label="Patient Name*" value={appointment.patientName} onChange={(v:any)=>handleChange('patientName',v)} />
+        <SelectField label="Gender" value={appointment.gender} onChange={(v:any)=>handleChange('gender',v)} options={["", "Male", "Female", "Other"]} />
+        <InputField label="Age" value={appointment.age} onChange={(v:any)=>handleChange('age',v)} />
+        <InputField label="Location" value={appointment.location} onChange={(v:any)=>handleChange('location',v)} />
+        <InputField label="PIN" value={appointment.pin} onChange={(v:any)=>handleChange('pin',v)} />
+
+        {/* Member Radio Buttons */}
+        <div>
+          <p className="text-xs font-semibold">Member</p>
+          <div className="flex items-center gap-4 mt-1">
+            <label className="text-xs flex items-center gap-1">
+              <input type="radio" checked={!appointment.member} onChange={() => handleChange("member", false)} /> Non-Member
+            </label>
+            <label className="text-xs flex items-center gap-1">
+              <input type="radio" checked={appointment.member} onChange={() => handleChange("member", true)} /> Member
+            </label>
+          </div>
         </div>
 
-        <div className="grid grid-cols-3 mt-2">
-          <div>
-            <p className="text-xs font-semibold">Date:</p>
-            <input
-              className="border px-2 py-1 rounded-md text-xs"
-              value={invoice.date}
-              onChange={(e) => handleFieldChange("date", e.target.value)}
-            />
-            <p className="text-xs font-semibold mt-2">Invoice No:</p>
-            <input
-              className="border px-2 py-1 rounded-md text-xs"
-              value={invoice.invoiceNo}
-              onChange={(e) => handleFieldChange("invoiceNo", e.target.value)}
-            />
-          </div>
-          <div />
-          <div className="flex justify-end items-start">
-            <img src={Logo} alt="Logo" width={70} height={70} />
-            <span className="font-semibold text-xl ml-2">NEXUS</span>
-          </div>
-        </div>
+        <InputField label="FSSAI" value={appointment.fssai} onChange={(v:any)=>handleChange('fssai',v)} />
+      </Section>
 
-        {/* Additional fields can go here if needed */}
+      {/* Section 2 — Appointment Details */}
+      <Section title="Appointment Details">
+        <InputField label="Doctor Name*" value={appointment.doctorName} onChange={(v:any)=>handleChange('doctorName',v)} />
+        <InputField label="Specialization" value={appointment.specialization} onChange={(v:any)=>handleChange('specialization',v)} />
+        <InputField label="Doctor Schedule" value={appointment.doctorSchedule} onChange={(v:any)=>handleChange('doctorSchedule',v)} />
+        <SelectField label="Status*" value={appointment.status} onChange={(v:any)=>handleChange('status',v)} options={["Pending", "Confirmed", "Cancelled"]} />
+        <InputField label="Appointment Date" type="date" value={appointment.appointmentDate} onChange={(v:any)=>handleChange('appointmentDate',v)} />
+        <InputField label="Appointment Time" type="time" value={appointment.appointmentTime} onChange={(v:any)=>handleChange('appointmentTime',v)} />
+      </Section>
 
+      {/* Section 3 — Payment Details */}
+      <Section title="Payment Details">
+        <InputField label="Paid Amount" value={appointment.paidAmount} onChange={(v:any)=>handleChange('paidAmount',v)} />
+        <InputField label="Discount" value={appointment.discount} onChange={(v:any)=>handleChange('discount',v)} />
+        <InputField label="Consultation Fee" value={appointment.consultationFee} onChange={(v:any)=>handleChange('consultationFee',v)} />
+        <InputField label="Total Bill" value={appointment.totalBill} onChange={(v:any)=>handleChange('totalBill',v)} />
+        <InputField label="Outstanding Amount" value={appointment.outstandingAmount} onChange={(v:any)=>handleChange('outstandingAmount',v)} />
+        <SelectField label="Payment Status" value={appointment.paymentStatus} onChange={(v:any)=>handleChange('paymentStatus',v)} options={["Pending","Paid","Partially Paid"]} />
+        <SelectField label="Payment Mode" value={appointment.paymentMode} onChange={(v:any)=>handleChange('paymentMode',v)} options={["Cash","Card","UPI","Online"]} />
+      </Section>
+
+      <div className="flex justify-end mt-4">
         <button
           onClick={onSave}
-          className="mt-4 px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700"
+          className="px-5 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
         >
-          Save Invoice
+          Save Appointment
         </button>
       </div>
     </div>
   );
 };
 
-const InvoiceManager: React.FC = () => {
-  const [invoices, setInvoices] = useState<InvoiceData[]>([]);
+// ---------------- Main Manager --------------------
+
+const AppointmentManager: React.FC = () => {
+  const [appointments, setAppointments] = useState<AppointmentData[]>([]);
   const [searchDate, setSearchDate] = useState('');
   const [searchPatient, setSearchPatient] = useState('');
   const [searchMobile, setSearchMobile] = useState('');
-  const [searchInvoiceNo, setSearchInvoiceNo] = useState('');
+  const [searchTitle, setSearchTitle] = useState('');
 
-  const addNewInvoice = async () => {
+  const addNewAppointment = async () => {
     const id = await window.context.createInvoice();
     if (!id) return;
 
-    const newInvoice: InvoiceData = {
-      ...EmptyInvoice,
-      items: EmptyInvoice.items.map((item) => ({ ...item })),
+    const newAppointment: AppointmentData = {
+      ...EmptyAppointment,
       title: id,
     };
 
-    setInvoices((prev) => [...prev, newInvoice]);
+    setAppointments((prev) => [...prev, newAppointment]);
   };
 
-  const handleInvoiceChange = (index: number, updatedInvoice: InvoiceData) => {
-    const updated = [...invoices];
-    updated[index] = updatedInvoice;
-    setInvoices(updated);
+  const handleChange = (index: number, updated: AppointmentData) => {
+    const list = [...appointments];
+    list[index] = updated;
+    setAppointments(list);
   };
 
-const handleSave = async (index: number) => {
-  const invoice = invoices[index];
-  const title = invoice.title;
-  if (!title) {
-    alert('No file title associated with this invoice.');
-    return;
-  }
+  const handleSave = async (index: number) => {
+    const appt = appointments[index];
+    if (!appt.title) return alert("Invalid title");
 
-  try {
-    await window.context.writeInvoice(title, JSON.stringify(invoice, null, 2));
-    alert(`Invoice "${title}" updated successfully.`);
-    // Optionally remove this if you want to keep the invoice visible:
-    // setInvoices([]);
-  } catch (error) {
-    console.error('Error saving invoice:', error);
-    alert('Failed to save invoice.');
-  }
-};
-
-
-  const getFilteredInvoices = async () => {
     try {
-      const result = await window.context.getInvoices(searchDate, {
-        patientName: searchPatient,
-        mobile: searchMobile,
-      });
-
-      const fetchedInvoices: InvoiceData[] = result.map((entry: any) => ({
-        ...EmptyInvoice,
-        ...entry.data,
-        title: entry.title,
-      }));
-
-      setInvoices(fetchedInvoices);
-    } catch (error) {
-      console.error("Error fetching invoices:", error);
-      alert("Failed to fetch invoices.");
+      await window.context.writeInvoice(appt.title, JSON.stringify(appt, null, 2));
+      alert("Appointment saved.");
+      setAppointments((prev) => prev.filter((_, i) => i !== index));
+    } catch (e) {
+      alert("Save failed.");
     }
   };
 
-  const searchByInvoiceNumber = async () => {
+  const getFilteredAppointments = async () => {
     try {
-      const invoice = await window.context.readInvoice(searchInvoiceNo);
-      if (!invoice) {
-        alert("Invoice not found.");
-        return;
-      }
+      const result = await window.context.getInvoices(searchDate, {
+        patientName: searchPatient,
+        mobile: searchMobile
+      });
 
-      setInvoices([
-        {
-          ...EmptyInvoice,
-          ...invoice,
-          title: invoice.id || '',
-        },
-      ]);
-    } catch (err) {
-      console.error("Error fetching invoice by number:", err);
-      alert("Failed to fetch invoice.");
+      const mapped = result.map((e:any) => ({ ...EmptyAppointment, ...e.data, title: e.title }));
+      setAppointments(mapped);
+    } catch {
+      alert("Failed to fetch.");
+    }
+  };
+
+  const searchByTitle = async () => {
+    try {
+      const appt = await window.context.readInvoice(searchTitle);
+      if (!appt) return alert("Not found");
+      setAppointments([{ ...EmptyAppointment, ...appt, title: appt.id || "" }]);
+    } catch {
+      alert("Error fetching");
     }
   };
 
   return (
     <div className="p-4">
-      {/* Search Inputs */}
-      <div className="flex flex-wrap gap-2 mb-4">
-        <input
-          type="text"
-          placeholder="Date (YYYY-MM-DD)"
-          className="border px-2 py-1 rounded-md"
-          value={searchDate}
-          onChange={(e) => setSearchDate(e.target.value)}
-        />
-        <input
-          type="text"
-          placeholder="Patient Name"
-          className="border px-2 py-1 rounded-md"
-          value={searchPatient}
-          onChange={(e) => setSearchPatient(e.target.value)}
-        />
-        <input
-          type="text"
-          placeholder="Mobile"
-          className="border px-2 py-1 rounded-md"
-          value={searchMobile}
-          onChange={(e) => setSearchMobile(e.target.value)}
-        />
-        <button
-          onClick={getFilteredInvoices}
-          className="px-3 py-1 bg-gray-800 text-white rounded hover:bg-gray-900"
-        >
-          Get Invoices
-        </button>
+      {/* Search Rows */}
+      <div className="flex gap-2 mb-4 flex-wrap">
+        <input className="border p-1 rounded" placeholder="Date" value={searchDate} onChange={(e)=>setSearchDate(e.target.value)} />
+        <input className="border p-1 rounded" placeholder="Patient Name" value={searchPatient} onChange={(e)=>setSearchPatient(e.target.value)} />
+        <input className="border p-1 rounded" placeholder="Mobile" value={searchMobile} onChange={(e)=>setSearchMobile(e.target.value)} />
+        <button onClick={getFilteredAppointments} className="bg-gray-800 text-white px-3 py-1 rounded">Get Appointments</button>
       </div>
 
-      {/* Search by Invoice No */}
-      <div className="flex flex-wrap gap-2 mb-4">
-        <input
-          type="text"
-          placeholder="Invoice No"
-          className="border px-2 py-1 rounded-md"
-          value={searchInvoiceNo}
-          onChange={(e) => setSearchInvoiceNo(e.target.value)}
-        />
-        <button
-          onClick={searchByInvoiceNumber}
-          className="px-3 py-1 bg-indigo-600 text-white rounded hover:bg-indigo-700"
-        >
-          Update by Invoice No
-        </button>
+      <div className="flex gap-2 mb-4 flex-wrap">
+        <input className="border p-1 rounded" placeholder="Appointment ID" value={searchTitle} onChange={(e)=>setSearchTitle(e.target.value)} />
+        <button onClick={searchByTitle} className="bg-indigo-600 text-white px-3 py-1 rounded">Update by ID</button>
       </div>
 
-      {/* Add new invoice */}
       <button
-        onClick={addNewInvoice}
-        className="mb-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+        onClick={addNewAppointment}
+        className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 mb-4"
       >
-        + Add New Invoice
+        + Add New Appointment
       </button>
 
-      {/* Render invoice forms */}
-      {invoices.map((invoice, idx) => (
-        <InvoiceForm
-          key={invoice.title || idx}
-          invoice={invoice}
-          onChange={(inv) => handleInvoiceChange(idx, inv)}
-          onSave={() => handleSave(idx)}
+      {appointments.map((a, i) => (
+        <AppointmentForm
+          key={a.title || i}
+          appointment={a}
+          onChange={(v) => handleChange(i, v)}
+          onSave={() => handleSave(i)}
         />
       ))}
     </div>
   );
 };
 
-export default InvoiceManager;
+export default AppointmentManager;
