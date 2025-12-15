@@ -58,6 +58,7 @@ interface BookingFormProps {
   bookingType: string
   sections: BookingSection[]
   onSave?: (data: { [key: string]: unknown[] }) => void
+  onBook: (data: Record<string, any[]>) => void
   showPatientId?: boolean
   hideDefaultHeader?: boolean
   customHeader?: React.ReactNode
@@ -89,6 +90,7 @@ const BookingFormManager: React.FC<BookingFormProps> = ({
   bookingType,
   sections,
   onSave,
+  onBook,
   hideDefaultHeader = false,
   customHeader,
   disablePatientToggle = false,
@@ -321,7 +323,37 @@ const BookingFormManager: React.FC<BookingFormProps> = ({
       }))
     }
   }
+  const handleBook = () => {
+     const sectionsForValidation = sections.filter((section) => !section.hideFromProgress)
+    const allSectionsHaveEntries = sectionsForValidation.every(
+      (section) => (allEntries[section.id] || []).length > 0
+    )
 
+    if (!allSectionsHaveEntries) {
+      alert('Please complete all required sections before booking')
+      return
+    }
+
+    const newBookingId = Math.floor(1000 + Math.random() * 9000).toString()
+    setBookingId(newBookingId)
+    setShowSuccessModal(true)
+
+    if (onSave) {
+      onSave(allEntries)
+    }
+    const required = sections.filter(s => !s.hideFromProgress)
+
+    const valid = required.every(
+      s => (allEntries[s.id] || []).length > 0
+    )
+
+    if (!valid) {
+      alert('Please complete all required sections')
+      return
+    }
+
+    onBook?.(allEntries) // ✅ FINAL EMIT
+  }
   const handleDateChange = (sectionId: string, fieldId: string, date: Date | null) => {
     if (isSectionLocked(sectionId)) return
 
@@ -1513,7 +1545,7 @@ const BookingFormManager: React.FC<BookingFormProps> = ({
                 ? 'bg-[#FB009C] text-white shadow-[#FB009C]/80'
                 : 'bg-[#FF94D6] text-white shadow-[#FB009C]/80 opacity-50 cursor-not-allowed'
             }`}
-            onClick={handleSave}
+            onClick={handleBook}
             disabled={
               !sections
                 .filter((section) => !section.hideFromProgress)

@@ -76,11 +76,11 @@ const EmptyInvoice: InvoiceData = {
 const InvoiceForm = ({
   invoice,
   onChange,
-  onSave
+ // onSave
 }: {
   invoice: InvoiceData
   onChange: (inv: InvoiceData) => void
-  onSave: () => void
+ // onSave: () => void
 }) => {
   const handleItemChange = (index: number, field: keyof InvoiceItem, value: string) => {
     const updatedItems = invoice.items.map((item, i) =>
@@ -92,6 +92,52 @@ const InvoiceForm = ({
   const handleFieldChange = (field: keyof InvoiceData, value: string) => {
     onChange({ ...invoice, [field]: value })
   }
+ const saveInvoice = async (inv: InvoiceData) => {
+  if (!inv.title) {
+    alert('Invoice file not created')
+    return
+  }
+
+  try {
+    await window.context.writeInvoice(
+      inv.title,
+      JSON.stringify(inv, null, 2)
+    )
+
+    alert(`Invoice "${inv.title}" saved successfully.`)
+
+    // ✅ RESET TO START SCREEN
+    onChange(EmptyInvoice)
+  } catch (err) {
+    console.error(err)
+    alert('Failed to save invoice')
+  }
+}
+
+const mapBookingToInvoice = (booking: any, invoice: InvoiceData): InvoiceData => ({
+  ...invoice,
+  patientName: booking.billPharmacy?.patientname || '',
+  mobile: booking.billPharmacy?.phoneNumber || '',
+  patientAddress: booking.billPharmacy?.address || '',
+  doctorName: booking.billPharmacy?.doctorname || '',
+  items: booking.item?.map((i: any) => ({
+    item: i.itemName,
+    quantity: i.qty,
+    hsn: i.hsn,
+    batch: i.batch,
+    expiry: i.expiry,
+    mrp: i.mrp,
+    gst: i.gst,
+    discount: i.discount,
+    total: i.total
+  })) || [],
+  amountPaid: booking.payment?.paidAmount || '',
+  totalDiscount: booking.payment?.totalDiscount || '',
+  totalBill: booking.payment?.totalbill || '',
+  outstandingAmount: booking.payment?.outstandingAmt || '',
+  paymentStatus: booking.payment?.paymentMode || ''
+})
+
   const supplierSection: BookingSection = {
     id: 'billPharmacy',
     allowMultipleEntries: false,
@@ -337,50 +383,68 @@ const InvoiceForm = ({
   return (
     <div className="border-2 border-gray-300 rounded-md w-full max-w-full p-4 mb-8">
       <div className="text-[10px]">
-        <div className="text-center">
-          <h1 className="text-lg font-bold underline">Sales Invoice</h1>
-        </div>
+     
 
-        <div className="grid grid-cols-3 mt-2">
-          <div>
-            <p className="text-xs font-semibold">Date:</p>
-            <input
-              className="border px-2 py-1 rounded-md text-xs"
-              value={invoice.date}
-              onChange={(e) => handleFieldChange('date', e.target.value)}
-            />
-            <p className="text-xs font-semibold mt-2">Invoice No:</p>
-            <input
-              className="border px-2 py-1 rounded-md text-xs"
-              value={invoice.invoiceNo}
-              onChange={(e) => handleFieldChange('invoiceNo', e.target.value)}
-            />
-          </div>
-          <div />
-          <div className="flex justify-end items-start">
-            <img src={Logo} alt="Logo" width={70} height={70} />
-            <span className="font-semibold text-xl ml-2">NEXUS</span>
-          </div>
-        </div>
+      <div className="grid grid-cols-3 items-start mb-4">
+  {/* LEFT: Date + Invoice No */}
+  <div className="space-y-2">
+    <div>
+      <p className="text-xs font-semibold">Date:</p>
+      <input
+        className="border rounded-md text-xs px-1 py-0 h-[20px]"
+        value={invoice.date}
+        onChange={(e) => handleFieldChange('date', e.target.value)}
+      />
+    </div>
+
+    <div>
+      <p className="text-xs font-semibold">Invoice No:</p>
+      <input
+        className="border rounded-md text-xs px-1 py-0 h-[20px]"
+        value={invoice.invoiceNo}
+        onChange={(e) => handleFieldChange('invoiceNo', e.target.value)}
+      />
+    </div>
+  </div>
+
+  {/* CENTER: Title */}
+  <div className="flex justify-center items-start">
+    <h1 className="text-lg font-bold underline">
+      Sales Invoice
+    </h1>
+  </div>
+
+  {/* RIGHT: Logo */}
+  <div className="flex justify-end items-start">
+    <img src={Logo} alt="Logo" width={70} height={70} />
+    <span className="font-semibold text-xl ml-2">NEXUS</span>
+  </div>
+</div>
 
         {/* Add rest of form fields... */}
         {/* You already have the full form UI, so I'm omitting it here to focus on integration */}
 
-        <button
+        {/* <button
           onClick={onSave}
           className="mt-4 px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700"
         >
           Save Invoice
-        </button>
+        </button> */}
       </div>
-      <BookingFormManager
-        bookingType="Consultation"
-        sections={[supplierSection, itemSection, paymentSection]}
-        hideDefaultHeader={true}
-        showPatientId={true}
-        is_existing_patient={'old'}
-        item_name={''}
-      />
+     <BookingFormManager
+  bookingType="Consultation"
+  sections={[supplierSection, itemSection, paymentSection]}
+  hideDefaultHeader
+  showPatientId
+  is_existing_patient="old"
+  item_name=""
+  onBook={(bookingData) => {
+    const updatedInvoice = mapBookingToInvoice(bookingData, invoice)
+    onChange(updatedInvoice)
+    saveInvoice(updatedInvoice)
+  }}
+/>
+
     </div>
   )
 }
@@ -411,23 +475,23 @@ const InvoiceManager: React.FC = () => {
     setInvoices(updated)
   }
 
-  const handleSave = async (index: number) => {
-    const invoice = invoices[index]
-    const title = invoice.title
-    if (!title) {
-      alert('No file title associated with this invoice.')
-      return
-    }
+  // const handleSave = async (index: number) => {
+  //       const invoice = invoices[index]
+  //       const title = invoice.title
+  //       if (!title) {
+  //         alert('No file title associated with this invoice.')
+  //         return
+  //       }
 
-    try {
-      await window.context.writeInvoice(title, JSON.stringify(invoice, null, 2))
-      alert(`Invoice "${title}" saved successfully.`)
-      setInvoices([]) // Reset to start screen
-    } catch (error) {
-      console.error('Error saving invoice:', error)
-      alert('Failed to save invoice.')
-    }
-  }
+  //       try {
+  //         await window.context.writeInvoice(title, JSON.stringify(invoice, null, 2))
+  //         alert(`Invoice "${title}" saved successfully.`)
+  //         setInvoices([]) // Reset to start screen
+  //       } catch (error) {
+  //         console.error('Error saving invoice:', error)
+  //         alert('Failed to save invoice.')
+  //       }
+  // }
 
   const getFilteredInvoices = async () => {
     try {
@@ -449,7 +513,8 @@ const InvoiceManager: React.FC = () => {
     }
   }
 
-  return (
+  return ( 
+    
     <div className="p-4">
       {/* Search Inputs */}
       <div className=" pt-4">
@@ -475,7 +540,7 @@ const InvoiceManager: React.FC = () => {
           key={invoice.title || idx}
           invoice={invoice}
           onChange={(inv) => handleInvoiceChange(idx, inv)}
-          onSave={() => handleSave(idx)}
+       //   onSave={() => handleSave(idx)}
         />
       ))}
     </div>
