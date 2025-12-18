@@ -497,7 +497,7 @@ const BookingFormManager: React.FC<BookingFormProps> = ({
       setFacilitiesActive(true)
     } else {
       const section = sections.find((s) => s.id === sectionId)
-      console.log(section?.allowMultipleEntries, 'This is for Ambulance')
+    //  console.log(section?.allowMultipleEntries, 'This is for Ambulance')
 
       if (!section) return
 
@@ -715,7 +715,7 @@ const BookingFormManager: React.FC<BookingFormProps> = ({
           const sectionId = sections[sectionIndex].id
           if (!isSectionLocked(sectionId) || sections[sectionIndex].allowMultipleEntries) {
             addEntry(sectionId)
-            console.log(sectionId)
+    //        console.log(sectionId)
           }
         }
         return
@@ -1004,7 +1004,7 @@ const BookingFormManager: React.FC<BookingFormProps> = ({
                         (item) => item.item_name === selectedItemName
                       )
                       if (matchedItem) {
-                        console.log(matchedItem)
+    //                    console.log(matchedItem)
 
                         getItemInfo(item_name, matchedItem.item_id)
                       }
@@ -1368,20 +1368,20 @@ const BookingFormManager: React.FC<BookingFormProps> = ({
             const isFacilitiesSection = section.id === 'additionalFacilities'
             const isActive = isFacilitiesSection ? facilitiesActive : activeSection === section.id
 
-            console.log(
-              'Section Check →',
-              section.id,
-              '| allowMultipleEntries:',
-              section.allowMultipleEntries,
-              '| hasEntries:',
-              hasEntries,
-              '| showAddButton:',
-              showAddButton,
-              '| isLocked:',
-              isLocked,
-              '| showFields:',
-              showFields
-            )
+            // console.log(
+            //   'Section Check →',
+            //   section.id,
+            //   '| allowMultipleEntries:',
+            //   section.allowMultipleEntries,
+            //   '| hasEntries:',
+            //   hasEntries,
+            //   '| showAddButton:',
+            //   showAddButton,
+            //   '| isLocked:',
+            //   isLocked,
+            //   '| showFields:',
+            //   showFields
+            // )
             return (
               <div key={section.id} className="p-2">
                 <div className="flex justify-start items-center mms:mb-4 md:mb-3">
