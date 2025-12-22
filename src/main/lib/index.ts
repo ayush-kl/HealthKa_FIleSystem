@@ -1,15 +1,16 @@
 import { ensureDirSync } from 'fs-extra'
-import { dialog } from 'electron'
-import { homedir } from 'os'
+import { dialog, app } from 'electron'
 import path from 'path'
-import sqlite3 from 'sqlite3'
+import Database from 'better-sqlite3'
 
 /* ----------------------------------
    CONFIG
 ---------------------------------- */
 
 const appDirectoryName = 'dawaiInvoices'
-export const getRootDir = () => path.join(homedir(), appDirectoryName)
+
+export const getRootDir = () =>
+  path.join(app.getPath('userData'), appDirectoryName)
 
 ensureDirSync(getRootDir())
 
@@ -19,129 +20,135 @@ const dbPath = path.join(getRootDir(), 'invoices.db')
    DB INIT
 ---------------------------------- */
 
-export const db = new sqlite3.Database(dbPath)
+export const db = new Database(dbPath)
 
-db.serialize(() => {
-  db.run(`
-    CREATE TABLE IF NOT EXISTS invoices (
-      id TEXT PRIMARY KEY,
-      createdAt INTEGER,
-      patientName TEXT,
-      mobile TEXT,
-      data TEXT
-    )
-  `)
-})
+db.prepare(`
+  CREATE TABLE IF NOT EXISTS invoices (
+    id TEXT PRIMARY KEY,
+    createdAt INTEGER,
+    patientName TEXT,
+    mobile TEXT,
+    data TEXT
+  )
+`).run()
 
 /* ----------------------------------
    CREATE INVOICE
 ---------------------------------- */
 
-export const createInvoice = (data: any = {}) =>
-  new Promise<string>((resolve, reject) => {
-    const id = `invoice-${Date.now()}`
-    const createdAt = Date.now()
+export const createInvoice = (data: any = {}) => {
+  const id = `invoice-${Date.now()}`
+  const createdAt = Date.now()
 
-    db.run(
-      `
-      INSERT INTO invoices (id, createdAt, patientName, mobile, data)
-      VALUES (?, ?, ?, ?, ?)
-      `,
-      [
-        id,
-        createdAt,
-        data.patientName || '',
-        data.mobile || '',
-        JSON.stringify({ id, createdAt, ...data }),
-      ],
-      (err) => {
-        if (err) reject(err)
-        else resolve(id)
-      }
-    )
-  })
+  db.prepare(`
+    INSERT INTO invoices (id, createdAt, patientName, mobile, data)
+    VALUES (?, ?, ?, ?, ?)
+  `).run(
+    id,
+    createdAt,
+    data.patientName || '',
+    data.mobile || '',
+    JSON.stringify({ id, createdAt, ...data })
+  )
+
+  return id
+}
 
 /* ----------------------------------
    UPDATE / WRITE INVOICE
 ---------------------------------- */
 
-export const writeInvoice = (id: string, content: string) =>
-  new Promise<void>((resolve, reject) => {
-    const parsed = JSON.parse(content)
+export const writeInvoice = (id: string, content: string) => {
+  const parsed = JSON.parse(content)
 
-    db.run(
-      `
-      UPDATE invoices
-      SET data = ?, patientName = ?, mobile = ?, createdAt = ?
-      WHERE id = ?
-      `,
-      [
-        JSON.stringify(parsed),
-        parsed.patientName || '',
-        parsed.mobile || '',
-        Date.now(),
-        id,
-      ],
-      (err) => {
-        if (err) reject(err)
-        else resolve()
-      }
-    )
-  })
+  db.prepare(`
+    UPDATE invoices
+    SET data = ?, patientName = ?, mobile = ?, createdAt = ?
+    WHERE id = ?
+  `).run(
+    JSON.stringify(parsed),
+    parsed.patientName || '',
+    parsed.mobile || '',
+    Date.now(),
+    id
+  )
+}
 
 /* ----------------------------------
    READ SINGLE INVOICE
 ---------------------------------- */
 
-export const readInvoice = (id: string) =>
-  new Promise<any | null>((resolve, reject) => {
-    db.get(
-      `SELECT data FROM invoices WHERE id = ?`,
-      [id],
-      (err, row: any) => {
-        if (err) reject(err)
-        else resolve(row ? JSON.parse(row.data) : null)
-      }
-    )
-  })
+export const readInvoice = (id: string) => {
+  const row = db
+    .prepare(`SELECT data FROM invoices WHERE id = ?`)
+    .get(id)
+
+  return row ? JSON.parse(row.data) : null
+}
+const normalizeDate = (d?: string) => {
+  if (!d) return ''
+
+  // input from date picker → YYYY-MM-DD
+  if (d.split('-')[0].length === 4) {
+    return d.split('-').reverse().join('-')
+  }
+
+  // already DD-MM-YYYY
+  return d
+}
 
 /* ----------------------------------
    GET INVOICES (FILTERS)
 ---------------------------------- */
-
 export const getInvoices = (
-  filters?: { patientName?: string; mobile?: string }
-) =>
-  new Promise<{ title: string; lastEditTime: number; data: any }[]>(
-    (resolve, reject) => {
-      let query = `SELECT * FROM invoices WHERE 1=1`
-      const params: any[] = []
+  date?: string,
+  filters?: {
+    patientname?: string
+    mobile?: string
+    invoiceNo?: string
+  }
+) => {
+  const rows = db
+    .prepare(`SELECT * FROM invoices ORDER BY createdAt DESC`)
+    .all()
 
-      if (filters?.patientName) {
-        query += ` AND patientName LIKE ?`
-        params.push(`%${filters.patientName}%`)
-      }
+  const searchDate = normalizeDate(date)
 
-      if (filters?.mobile) {
-        query += ` AND mobile LIKE ?`
-        params.push(`%${filters.mobile}%`)
-      }
+  const filtered = rows.filter((row: any) => {
+    const data = JSON.parse(row.data)
 
-      query += ` ORDER BY createdAt DESC`
+    // ✅ DATE (FIXED)
+    if (searchDate && data.date !== searchDate) return false
 
-      db.all(query, params, (err, rows: any[]) => {
-        if (err) reject(err)
-        else
-          resolve(
-            rows.map((row) => ({
-              title: row.id,
-              lastEditTime: row.createdAt,
-              data: JSON.parse(row.data),
-            }))
-          )
-      })
+    // ✅ INVOICE NO
+    if (filters?.invoiceNo) {
+      if (!data.invoiceNo?.includes(filters.invoiceNo)) return false
     }
-  )
+
+    // ✅ PATIENT NAME
+    if (filters?.patientname) {
+      const name =
+        data.billPharmacy?.[0]?.patientname?.toLowerCase() || ''
+      if (!name.includes(filters.patientname.toLowerCase())) return false
+    }
+
+    // ✅ MOBILE
+    if (filters?.mobile) {
+      const mobile =
+        data.billPharmacy?.[0]?.phoneNumber || ''
+      if (!mobile.includes(filters.mobile)) return false
+    }
+
+    return true
+  })
+
+  return filtered.map((row: any) => ({
+    title: row.id,
+    lastEditTime: row.createdAt,
+    data: JSON.parse(row.data)
+  }))
+}
+
 
 /* ----------------------------------
    DELETE INVOICE
@@ -159,10 +166,6 @@ export const deleteInvoice = async (id: string) => {
 
   if (response !== 0) return false
 
-  return new Promise<boolean>((resolve, reject) => {
-    db.run(`DELETE FROM invoices WHERE id = ?`, [id], (err) => {
-      if (err) reject(err)
-      else resolve(true)
-    })
-  })
+  db.prepare(`DELETE FROM invoices WHERE id = ?`).run(id)
+  return true
 }

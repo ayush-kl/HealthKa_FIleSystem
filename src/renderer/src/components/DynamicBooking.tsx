@@ -67,6 +67,7 @@ interface BookingFormProps {
   existingPatientData?: ExistingPatient[]
   is_existing_patient: 'old' | 'new'
   item_name: string
+  initialData?: any   
   message?: { message_info: string; id: string }
 }
 
@@ -91,6 +92,7 @@ const BookingFormManager: React.FC<BookingFormProps> = ({
   sections,
   onSave,
   onBook,
+  initialData,
   hideDefaultHeader = false,
   customHeader,
   disablePatientToggle = false,
@@ -129,7 +131,12 @@ const BookingFormManager: React.FC<BookingFormProps> = ({
     item_name: string
     item_id: string
   }
-
+useEffect(() => {
+  if (initialData) {
+    console.log('Loading initial data into form:', initialData);
+    setAllEntries(initialData)
+  }
+}, [initialData])
   useEffect(() => {
     const newFormValues = { ...formValues }
     let hasChanges = false
@@ -192,6 +199,8 @@ const BookingFormManager: React.FC<BookingFormProps> = ({
   }
 
   useEffect(() => {
+
+   if (initialData) return 
     const initialFormValues: Record<string, any> = {}
     const initialEntries: Record<string, any[]> = {}
     const initialLockedSections: Record<string, boolean> = {}

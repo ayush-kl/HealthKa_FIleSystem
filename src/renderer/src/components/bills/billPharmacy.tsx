@@ -1,11 +1,15 @@
 /**
- * COMPLETE FIXED InvoiceManager Component
- * File 2: InvoiceManager.tsx (React Component)
+ * FINAL FIXED InvoiceManager Component
+ * ✅ SOLUTION: Pre-populate allEntries with existing data
  */
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import Logo from '../../../../../resources/icon.png'
 import BookingFormManager, { BookingSection } from '../DynamicBooking'
+import { useNavigate } from 'react-router-dom'
+
+
+
 
 interface InvoiceItem {
   item: string
@@ -81,16 +85,62 @@ const EmptyInvoice: InvoiceData = {
 
 const InvoiceForm = ({
   invoice,
-  onChange
+  onChange,
+  isExisting = false
 }: {
   invoice: InvoiceData
   onChange: (inv: InvoiceData) => void
+  isExisting?: boolean
 }) => {
+  const [preloadedData, setPreloadedData] = useState<any>(null)
+
+  // ✅ FIX: Convert InvoiceData to BookingFormManager format
+  useEffect(() => {
+    if (isExisting && invoice.patientName) {
+      console.log('🔄 Pre-loading invoice data:', invoice)
+      
+      const bookingData = {
+        billPharmacy: [
+          {
+            patientname: invoice.patientName,
+            phoneNumber: invoice.mobile,
+            address: invoice.patientAddress,
+            doctorname: invoice.doctorName
+          }
+        ],
+        item: invoice.items.map(item => ({
+          itemName: item.item,
+          qty: item.quantity,
+          hsn: item.hsn,
+          batch: item.batch,
+          expiry: item.expiry,
+          mrp: item.mrp,
+          gst: item.gst,
+          discount: item.discount,
+          total: item.total
+        })),
+        payment: [
+          {
+            paidAmount: invoice.amountPaid,
+            paymentMode: invoice.paymentStatus,
+            totalDiscount: invoice.totalDiscount,
+            totalbill: invoice.totalBill,
+            outstandingAmt: invoice.outstandingAmount
+          }
+        ]
+      }
+      
+      console.log('✅ Converted to booking format:', bookingData)
+      setPreloadedData(bookingData)
+    } else {
+      setPreloadedData(null)
+    }
+  }, [invoice.title, isExisting])
+
   const handleFieldChange = (field: keyof InvoiceData, value: string) => {
     onChange({ ...invoice, [field]: value })
   }
 
-  // ✅ FIXED: This function now accepts bookingData directly
   const saveInvoice = async (bookingData: any, invoiceId: string) => {
     if (!invoiceId) {
       alert('Invoice file not created')
@@ -100,24 +150,23 @@ const InvoiceForm = ({
     try {
       console.log('💾 Saving invoice with booking data:', bookingData)
       
-      // Get current date in DD-MM-YYYY format
       const today = new Date()
       const formattedDate = `${today.getDate().toString().padStart(2, '0')}-${(today.getMonth() + 1).toString().padStart(2, '0')}-${today.getFullYear()}`
       
-      // Add date and invoice number to the data
       const dataToSave = {
         ...bookingData,
-        date: formattedDate,
-        invoiceNo: `INV-${Date.now()}`
+        date: invoice.date || formattedDate,
+        invoiceNo: invoice.invoiceNo || `INV-${Date.now()}`
       }
 
       console.log('📤 Data being sent to database:', dataToSave)
 
       await window.context.writeInvoice(invoiceId, JSON.stringify(dataToSave, null, 2))
-      alert(`Invoice saved successfully!`)
+      alert(`Invoice ${isExisting ? 'updated' : 'saved'} successfully!`)
       
-      // Reset form
-      onChange(EmptyInvoice)
+      if (!isExisting) {
+        onChange(EmptyInvoice)
+      }
     } catch (err) {
       console.error('❌ Error saving invoice:', err)
       alert('Failed to save invoice: ' + (err as Error).message)
@@ -376,6 +425,8 @@ const InvoiceForm = ({
     }
   }
 
+  const formKey = `${invoice.title}-${Date.now()}`
+
   return (
     <div className="border-2 border-gray-300 rounded-md w-full max-w-full p-4 mb-8">
       <div className="text-[10px]">
@@ -407,21 +458,66 @@ const InvoiceForm = ({
           </div>
         </div>
 
-        <BookingFormManager
-          bookingType="Consultation"
-          sections={[supplierSection, itemSection, paymentSection]}
-          hideDefaultHeader
-          showPatientId={false}
-          is_existing_patient="new"
-          item_name=""
-          saveButtonText="Save Invoice"
-          onBook={(bookingData) => {
-            console.log('✅ Received booking data from form:', bookingData)
-            // Pass the raw bookingData directly - SQLite will handle the mapping
-            saveInvoice(bookingData, invoice.title || '')
-          }}
-        />
+      
+          <BookingFormManager
+            key={formKey}
+            bookingType="Consultation"
+            sections={[supplierSection, itemSection, paymentSection]}
+            hideDefaultHeader
+            showPatientId={false}
+            is_existing_patient="new"
+            item_name=""
+              initialData={preloadedData}
+            saveButtonText={isExisting ? "Update Invoice" : "Save Invoice"}
+            onBook={(bookingData) => {
+              console.log('✅ Received booking data from form:', bookingData)
+              saveInvoice(bookingData, invoice.title || '')
+            }}
+          />
+        
       </div>
+    </div>
+  )
+}
+
+// ✅ NEW: Wrapper component that handles pre-loaded data
+const PreloadedBookingForm = ({
+  preloadedData,
+  sections,
+  isExisting,
+  onBook
+}: {
+  preloadedData: any
+  sections: any[]
+  isExisting: boolean
+  onBook: (data: any) => void
+}) => {
+  const [initialized, setInitialized] = useState(false)
+
+  // This is a workaround - we render the form, then immediately populate it
+  // by triggering the onSave callback with the preloaded data
+  useEffect(() => {
+    if (!initialized && preloadedData) {
+      setInitialized(true)
+    }
+  }, [preloadedData, initialized])
+
+  return (
+    <div>
+      <BookingFormManager
+        bookingType="Consultation"
+        sections={sections}
+        hideDefaultHeader
+        showPatientId={false}
+        is_existing_patient="new"
+        item_name=""
+        saveButtonText={isExisting ? "Update Invoice" : "Save Invoice"}
+        onBook={onBook}
+        onSave={(data) => {
+          // This gets called when form initializes
+          console.log('Form initialized with data:', data)
+        }}
+      />
     </div>
   )
 }
@@ -432,7 +528,7 @@ const InvoiceManager: React.FC = () => {
   const [searchPatient, setSearchPatient] = useState('')
   const [searchMobile, setSearchMobile] = useState('')
   const [loading, setLoading] = useState(false)
-
+  const navigate = useNavigate()
   const addNewInvoice = async () => {
     const id = await window.context.createInvoice()
     if (!id) {
@@ -446,7 +542,7 @@ const InvoiceManager: React.FC = () => {
       title: id
     }
 
-    setInvoices((prev) => [...prev, newInvoice])
+    setInvoices((prev) => [newInvoice, ...prev])
   }
 
   const handleInvoiceChange = (index: number, updatedInvoice: InvoiceData) => {
@@ -467,59 +563,24 @@ const InvoiceManager: React.FC = () => {
       
       console.log('📦 Raw result from API:', result)
 
-      if (!result) {
-        console.warn('⚠️ No result returned')
-        alert('No invoices found - API returned no data')
+      if (!result || !Array.isArray(result) || result.length === 0) {
+        alert('No invoices found')
         setInvoices([])
         setLoading(false)
         return
       }
 
-      if (!Array.isArray(result)) {
-        console.warn('⚠️ Result is not an array:', result)
-        alert('Invalid response format from API')
-        setInvoices([])
-        setLoading(false)
-        return
-      }
+      const fetchedInvoices: InvoiceData[] = result.map((entry: any) => ({
+        ...EmptyInvoice,
+        ...entry.data,
+        title: entry.title
+      }))
 
-      if (result.length === 0) {
-        console.warn('⚠️ Empty array returned')
-        alert('No invoices found in storage')
-        setInvoices([])
-        setLoading(false)
-        return
-      }
-
-      console.log('✅ Processing', result.length, 'invoice(s)')
-
-      // Map the results to InvoiceData format
-      const fetchedInvoices: InvoiceData[] = result.map((entry: any) => {
-        console.log('📄 Processing invoice:', entry)
-        
-        // The data is already formatted by the SQLite handler
-        const invoiceData = entry.data
-        
-        return {
-          ...EmptyInvoice,
-          ...invoiceData,
-          title: entry.title
-        }
-      })
-
-      console.log('✅ Final mapped invoices:', fetchedInvoices)
-      console.log('✅ Total invoices to display:', fetchedInvoices.length)
-
-      if (fetchedInvoices.length === 0) {
-        alert('No valid invoices found after processing')
-      } else {
-        alert(`Successfully loaded ${fetchedInvoices.length} invoice(s)`)
-      }
-
+      console.log('✅ Loaded invoices:', fetchedInvoices)
+      alert(`Successfully loaded ${fetchedInvoices.length} invoice(s)`)
       setInvoices(fetchedInvoices)
     } catch (error: any) {
       console.error('❌ Error fetching invoices:', error)
-      console.error('❌ Error stack:', error.stack)
       alert('Failed to fetch invoices: ' + error.message)
       setInvoices([])
     } finally {
@@ -529,7 +590,16 @@ const InvoiceManager: React.FC = () => {
 
   return (
     <div className="p-4">
-      {/* Search Inputs */}
+        <div className="flex justify-between items-center mb-4">
+        <h1 className="text-xl font-semibold">Invoice Manager</h1>
+
+        <button
+          onClick={() => navigate('/invoice-search')}
+          className="px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700"
+        >
+          🔍 Search Invoices
+        </button>
+      </div>
       <div className="pt-4 mb-4 space-y-2">
         <div className="flex gap-2">
           <input
@@ -571,7 +641,6 @@ const InvoiceManager: React.FC = () => {
         + Add New Invoice
       </button>
 
-      {/* Display loaded invoices count */}
       {invoices.length > 0 && (
         <div className="mb-4 text-sm text-gray-600">
           Showing {invoices.length} invoice(s)
@@ -583,10 +652,10 @@ const InvoiceManager: React.FC = () => {
           key={invoice.title || idx}
           invoice={invoice}
           onChange={(inv) => handleInvoiceChange(idx, inv)}
+          isExisting={!!invoice.patientName}
         />
       ))}
 
-      {/* Show message when no invoices */}
       {!loading && invoices.length === 0 && (
         <div className="text-center text-gray-500 py-8">
           No invoices to display. Click "Get Invoices" to load saved data or "Add New Invoice" to create one.
@@ -596,4 +665,4 @@ const InvoiceManager: React.FC = () => {
   )
 }
 
-export default InvoiceManager
+export default InvoiceManager 
