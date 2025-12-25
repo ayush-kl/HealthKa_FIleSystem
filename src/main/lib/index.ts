@@ -31,6 +31,20 @@ db.prepare(`
     data TEXT
   )
 `).run()
+db.prepare(`
+  CREATE TABLE IF NOT EXISTS items (
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    category TEXT NOT NULL,
+    batchNo TEXT NOT NULL,
+    unit TEXT NOT NULL,
+    minStock INTEGER NOT NULL,
+    rack TEXT,
+    productType TEXT,
+    createdAt INTEGER,
+    updatedAt INTEGER
+  )
+`).run()
 
 /* ----------------------------------
    CREATE INVOICE
@@ -149,6 +163,19 @@ export const getInvoices = (
   }))
 }
 
+export const getInvoiceById = (id: string) => {
+  const row = db
+    .prepare(`SELECT * FROM invoices WHERE id = ?`)
+    .get(id)
+
+  if (!row) return null
+
+  return {
+    title: row.id,
+    lastEditTime: row.createdAt,
+    data: JSON.parse(row.data)
+  }
+}
 
 /* ----------------------------------
    DELETE INVOICE
@@ -168,4 +195,50 @@ export const deleteInvoice = async (id: string) => {
 
   db.prepare(`DELETE FROM invoices WHERE id = ?`).run(id)
   return true
+}
+const validateItem = (item: any) => {
+  if (
+    !item.name ||
+    !item.id ||
+    !item.category ||
+    !item.batchNo ||
+    !item.unit ||
+    item.minStock === undefined
+  ) {
+    throw new Error('Missing mandatory item fields')
+  }
+}
+
+export const createItem = (item: {
+  id: string
+  name: string
+  category: string
+  batchNo: string
+  unit: string
+  minStock: number
+  rack?: string
+  productType?: string
+}) => {
+  validateItem(item)
+
+  const now = Date.now()
+
+  db.prepare(`
+    INSERT INTO items
+    (id, name, category, batchNo, unit, minStock, rack, productType, createdAt, updatedAt)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `).run(
+    item.id,
+    item.name,
+    item.category,
+    item.batchNo,
+    item.unit,
+    item.minStock,
+    item.rack || '',
+    item.productType || '',
+    now,
+    now
+  )
+
+  return item.id
 }

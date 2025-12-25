@@ -600,6 +600,13 @@ const InvoiceManager: React.FC = () => {
           🔍 Search Invoices
         </button>
       </div>
+      <button
+  onClick={() => navigate('/inventory')}
+  className="mb-4 ml-3 px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
+>
+  + Create Inventory
+</button>
+
       <div className="pt-4 mb-4 space-y-2">
         <div className="flex gap-2">
           <input

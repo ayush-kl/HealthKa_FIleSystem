@@ -28,35 +28,12 @@ const InvoiceSearchPage: React.FC = () => {
 
   /* ---------- FETCH ---------- */
 
-  const handleSearch = async () => {
-    setLoading(true)
-    try {
-      const result = await window.context.getInvoices(searchDate, {
-        invoiceNo: searchId,
-        patientname: searchPatient,
-        mobile: searchMobile
-      })
-      console.log(result);
-      if (!Array.isArray(result) || result.length === 0) {
-        setInvoices([])
-        alert('No invoices found')
-        return
-      }
+const handleSearch = () => {
+  navigate(
+    `/invoice-list?date=${searchDate}&invoiceNo=${searchId}&patient=${searchPatient}&mobile=${searchMobile}`
+  )
+}
 
-      const mapped: InvoiceData[] = result.map((entry: any) => ({
-        title: entry.title,
-        ...entry.data
-      }))
-
-      setInvoices(mapped)
-    } catch (err: any) {
-      console.error(err)
-      alert('Failed to fetch invoices')
-      setInvoices([])
-    } finally {
-      setLoading(false)
-    }
-  }
 
   /* ---------- UI ---------- */
 

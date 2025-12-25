@@ -1,4 +1,4 @@
-import { CreateInvoice, DeleteInvoice, GetInvoices, ReadInvoice, WriteInvoice } from '@shared/types'
+import { CreateInvoice, DeleteInvoice, GetInvoices, ReadInvoice, WriteInvoice,GetInvoiceById } from '@shared/types'
 import { contextBridge, ipcRenderer } from 'electron'
 
 if (!process.contextIsolated) {
@@ -12,7 +12,9 @@ try {
     readInvoice: (...args: Parameters<ReadInvoice>) => ipcRenderer.invoke('readInvoice', ...args),
     writeInvoice: (...args: Parameters<WriteInvoice>) => ipcRenderer.invoke('writeInvoice', ...args),
     createInvoice: (...args: Parameters<CreateInvoice>) => ipcRenderer.invoke('createInvoice', ...args),
-    deleteInvoice: (...args: Parameters<DeleteInvoice>) => ipcRenderer.invoke('deleteInvoice', ...args)
+    deleteInvoice: (...args: Parameters<DeleteInvoice>) => ipcRenderer.invoke('deleteInvoice', ...args),
+    getInvoiceById: (...args: Parameters<GetInvoiceById>) => ipcRenderer.invoke('getInvoiceById', ...args),
+
   })
 } catch (error) {
   console.error(error)

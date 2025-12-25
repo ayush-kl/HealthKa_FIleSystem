@@ -1,7 +1,7 @@
-import { createInvoice, deleteInvoice, getInvoices, readInvoice, writeInvoice } from '@/lib'
+import { createInvoice, deleteInvoice, getInvoiceById, getInvoices, readInvoice, writeInvoice } from '@/lib'
 import { electronApp, is, optimizer } from '@electron-toolkit/utils'
 // import { CreateNote, DeleteNote, GetNotes, ReadNote, WriteNote } from '@shared/types'
-import { CreateInvoice, DeleteInvoice, GetInvoices, ReadInvoice, WriteInvoice } from '@shared/types'
+import { CreateInvoice, DeleteInvoice, GetInvoices, ReadInvoice, WriteInvoice,GetInvoiceById } from '@shared/types'
 import { BrowserWindow, app, ipcMain, shell } from 'electron'
 import { join } from 'path'
 import icon from '../../resources/icon.png?asset'
@@ -61,6 +61,7 @@ app.whenReady().then(() => {
   })
 
   ipcMain.handle('getInvoices', (_, ...args: Parameters<GetInvoices>) => getInvoices(...args))
+  ipcMain.handle('getInvoiceById', (_, ...args: Parameters<GetInvoiceById>) => getInvoiceById(...args))
   ipcMain.handle('readInvoice', (_, ...args: Parameters<ReadInvoice>) => readInvoice(...args))
   ipcMain.handle('writeInvoice', (_, ...args: Parameters<WriteInvoice>) => writeInvoice(...args))
   ipcMain.handle('createInvoice', (_, ...args: Parameters<CreateInvoice>) => createInvoice(...args))
