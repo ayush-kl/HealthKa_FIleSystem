@@ -5,6 +5,7 @@
   "license": "MIT",
   "main": "./out/main/index.js",
   "scripts": {
+     "clean:vite": "rimraf electron.vite.config.*.mjs",
     "format": "prettier --write .",
     "lint": "eslint . --ext .js,.jsx,.cjs,.mjs,.ts,.tsx,.cts,.mts --fix",
     "typecheck:node": "tsc --noEmit -p tsconfig.node.json --composite false",

@@ -1,7 +1,7 @@
-import { createInvoice, deleteInvoice, getInvoiceById, getInvoices, readInvoice, writeInvoice } from '@/lib'
+import { createInventory, createInvoice, deleteInvoice, getInvoiceById, getInvoices, readInvoice, writeInvoice,getInventory,getInventoryById } from '@/lib'
 import { electronApp, is, optimizer } from '@electron-toolkit/utils'
 // import { CreateNote, DeleteNote, GetNotes, ReadNote, WriteNote } from '@shared/types'
-import { CreateInvoice, DeleteInvoice, GetInvoices, ReadInvoice, WriteInvoice,GetInvoiceById } from '@shared/types'
+import { CreateInvoice, DeleteInvoice, GetInvoices, ReadInvoice, WriteInvoice,GetInvoiceById,CreateInventory,GetInventory,GetInventoryById } from '@shared/types'
 import { BrowserWindow, app, ipcMain, shell } from 'electron'
 import { join } from 'path'
 import icon from '../../resources/icon.png?asset'
@@ -66,7 +66,9 @@ app.whenReady().then(() => {
   ipcMain.handle('writeInvoice', (_, ...args: Parameters<WriteInvoice>) => writeInvoice(...args))
   ipcMain.handle('createInvoice', (_, ...args: Parameters<CreateInvoice>) => createInvoice(...args))
   ipcMain.handle('deleteInvoice', (_, ...args: Parameters<DeleteInvoice>) => deleteInvoice(...args))
-
+  ipcMain.handle('createInventory', (_, ...args: Parameters<CreateInventory>) => createInventory(...args))
+  ipcMain.handle('getInventory', (_, ...args: Parameters<GetInventory>) => getInventory(...args))
+  ipcMain.handle('getInventoryById', (_, ...args: Parameters<GetInventoryById>) => getInventoryById(...args))
   createWindow()
 
   app.on('activate', function () {

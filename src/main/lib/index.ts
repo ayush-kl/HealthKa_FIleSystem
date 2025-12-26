@@ -32,7 +32,7 @@ db.prepare(`
   )
 `).run()
 db.prepare(`
-  CREATE TABLE IF NOT EXISTS items (
+  CREATE TABLE IF NOT EXISTS Inventory (
     id TEXT PRIMARY KEY,
     name TEXT NOT NULL,
     category TEXT NOT NULL,
@@ -209,7 +209,7 @@ const validateItem = (item: any) => {
   }
 }
 
-export const createItem = (item: {
+export const createInventory = (inventory: {
   id: string
   name: string
   category: string
@@ -219,26 +219,68 @@ export const createItem = (item: {
   rack?: string
   productType?: string
 }) => {
-  validateItem(item)
+  validateItem(inventory)
 
   const now = Date.now()
 
   db.prepare(`
-    INSERT INTO items
+    INSERT INTO Inventory
     (id, name, category, batchNo, unit, minStock, rack, productType, createdAt, updatedAt)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `).run(
-    item.id,
-    item.name,
-    item.category,
-    item.batchNo,
-    item.unit,
-    item.minStock,
-    item.rack || '',
-    item.productType || '',
+    inventory.id,
+    inventory.name,
+    inventory.category,
+    inventory.batchNo,
+    inventory.unit,
+    inventory.minStock,
+    inventory.rack || '',
+    inventory.productType || '',
     now,
     now
   )
 
-  return item.id
+  return inventory.id
+}
+export const getInventory = (filters?: {
+  name?: string
+  category?: string
+}) => {
+  const rows = db
+    .prepare(`SELECT * FROM Inventory ORDER BY updatedAt DESC`)
+    .all()
+
+  return rows.filter((row: any) => {
+    // 🔍 Filter by item name
+    if (filters?.name) {
+      if (!row.name.toLowerCase().includes(filters.name.toLowerCase())) {
+        return false
+      }
+    }
+
+    // 📦 Filter by category
+    if (filters?.category) {
+      if (!row.category.toLowerCase().includes(filters.category.toLowerCase())) {
+        return false
+      }
+    }
+
+    return true
+  }).map((row: any) => ({
+    id: row.id,
+    name: row.name,
+    category: row.category,
+    batchNo: row.batchNo,
+    unit: row.unit,
+    minStock: row.minStock,
+    rack: row.rack,
+    productType: row.productType,
+    createdAt: row.createdAt,
+    updatedAt: row.updatedAt
+  }))
+}
+export const getInventoryById = (id: string) => {
+  return db
+    .prepare(`SELECT * FROM Inventory WHERE id = ?`)
+    .get(id)
 }
