@@ -1,10 +1,11 @@
 import { createInventory, createInvoice, deleteInvoice, getInvoiceById, getInvoices, readInvoice, writeInvoice,getInventory,getInventoryById } from '@/lib'
 import { electronApp, is, optimizer } from '@electron-toolkit/utils'
 // import { CreateNote, DeleteNote, GetNotes, ReadNote, WriteNote } from '@shared/types'
-import { CreateInvoice, DeleteInvoice, GetInvoices, ReadInvoice, WriteInvoice,GetInvoiceById,CreateInventory,GetInventory,GetInventoryById } from '@shared/types'
+import { CreateInvoice, DeleteInvoice, GetInvoices, ReadInvoice, WriteInvoice,GetInvoiceById,CreateInventory,GetInventory,GetInventoryById,CreateCreditDebitNote,WriteCreditDebitNote, GetCreditDebitNotes } from '@shared/types'
 import { BrowserWindow, app, ipcMain, shell } from 'electron'
 import { join } from 'path'
 import icon from '../../resources/icon.png?asset'
+import { createCreditDebitNote,getCreditDebitNotes,writeCreditDebitNote } from './lib/creditdebit'
 
 function createWindow(): void {
   // Create the browser window.
@@ -69,6 +70,14 @@ app.whenReady().then(() => {
   ipcMain.handle('createInventory', (_, ...args: Parameters<CreateInventory>) => createInventory(...args))
   ipcMain.handle('getInventory', (_, ...args: Parameters<GetInventory>) => getInventory(...args))
   ipcMain.handle('getInventoryById', (_, ...args: Parameters<GetInventoryById>) => getInventoryById(...args))
+  ipcMain.handle('createCreditDebitNote', (_, ...args: Parameters<CreateCreditDebitNote>) => createCreditDebitNote(...args))
+  ipcMain.handle('writeCreditDebitNote', (_, ...args: Parameters<WriteCreditDebitNote>) => writeCreditDebitNote(...args))
+  ipcMain.handle('getCreditDebitNotes', (_, args: Parameters<GetCreditDebitNotes>[0]) => {
+    const convertedArgs = args ? { ...args, fromDate: args.fromDate ? Number(args.fromDate) : undefined, toDate: args.toDate ? Number(args.toDate) : undefined } : undefined
+    return getCreditDebitNotes(convertedArgs)
+  })
+
+  
   createWindow()
 
   app.on('activate', function () {

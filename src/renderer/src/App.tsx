@@ -8,6 +8,10 @@ import InventoryHome from './components/Inventory/InventoryHome'
 import InventorySearch from './components/Inventory/GetInventory'
 import InventoryLists from './components/Inventory/InventoryLists'
 import InventoryDetail from './components/Inventory/InventoryDetail'
+import CreateCreditDebitNote from './components/DebitCreditNote/CreateBooking'
+import CreditDebitNoteSearch from './components/DebitCreditNote/GetDebitCredit'
+import CreditDebitNoteList from './components/DebitCreditNote/DebitCreditNoteList'
+import CreditDebitNoteView from './components/DebitCreditNote/CreditDebitDetail'
 
 const App = () => {
   return (
@@ -23,6 +27,15 @@ const App = () => {
         <Route path="/inventory/lists" element={<InventoryLists />} />
 <Route path="/inventory/create" element={<Inventory />} />
  <Route path="/inventory/:id" element={<InventoryDetail />} />
+ <Route
+  path="/inventory/credit-debit/create"
+  element={<CreateCreditDebitNote />}
+  
+/>
+<Route path="/inventory/credit-debit/search" element={<CreditDebitNoteSearch />} />
+<Route path="/credit-debit-notes/list" element={<CreditDebitNoteList />} />
+<Route path="/credit-debit-notes/view" element={<CreditDebitNoteView />} />
+
       </Routes>
 
     </HashRouter>

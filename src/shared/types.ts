@@ -9,6 +9,7 @@ export type WriteInvoice = (title: NoteInfo['title'], content: NoteContent) => P
 export type CreateInvoice = () => Promise<NoteInfo['title'] | false>
 export type CreateInventory = (payload: any) => Promise<void>
 export type DeleteInvoice = (title: NoteInfo['title']) => Promise<boolean>
+export type CreateCreditDebitNote = (payload: any) => Promise<void>
 export type GetInventory = (filters?: {
   name?: string
   category?: string
@@ -17,3 +18,9 @@ export type GetInventory = (filters?: {
 export type GetInventoryById = (
   id: string
 ) => Promise<any | null>
+export type WriteCreditDebitNote = (id: string, payload: any) => Promise<void>
+export type GetCreditDebitNotes = (filters?: {
+  noteId?: string
+  fromDate?: string
+  toDate?: string
+}) => Promise<any[]>

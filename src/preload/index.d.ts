@@ -1,4 +1,4 @@
-import { CreateNote, DeleteNote, GetNotes, ReadNote, WriteNote,GetInvoiceById,CreateInventory,GetInventory,GetInventoryById } from '@shared/types'
+import { CreateNote, DeleteNote, GetNotes, ReadNote, WriteNote,GetInvoiceById,CreateInventory,GetInventory,GetInventoryById, CreateCreditDebitNote, WriteCreditDebitNote } from '@shared/types'
 
 declare global {
   interface Window {
@@ -14,6 +14,9 @@ declare global {
       createInventory: CreateInventory
       getInventory: GetInventory
       getInventoryById: GetInventoryById
+      createCreditDebitNote: CreateCreditDebitNote
+      writeCreditDebitNote: WriteCreditDebitNote
+      getCreditDebitNotes: GetCreditDebitNotes
     }
   }
 }

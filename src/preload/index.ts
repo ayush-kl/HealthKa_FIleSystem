@@ -1,4 +1,5 @@
-import { CreateInvoice, DeleteInvoice, GetInvoices, ReadInvoice, WriteInvoice,GetInvoiceById,CreateInventory, GetInventoryById, GetInventory } from '@shared/types'
+import { writeCreditDebitNote } from '@/lib/creditdebit'
+import { CreateInvoice, DeleteInvoice, GetInvoices, ReadInvoice, WriteInvoice,GetInvoiceById,CreateInventory, GetInventoryById, GetInventory, CreateCreditDebitNote, WriteCreditDebitNote, GetCreditDebitNotes } from '@shared/types'
 import { create } from 'domain'
 import { contextBridge, ipcRenderer } from 'electron'
 import { get } from 'http'
@@ -18,7 +19,10 @@ try {
     getInvoiceById: (...args: Parameters<GetInvoiceById>) => ipcRenderer.invoke('getInvoiceById', ...args),
     createInventory: (...args: Parameters<CreateInventory>) => ipcRenderer.invoke('createInventory', ...args),
     getInventory: (...args: Parameters<GetInventory>) => ipcRenderer.invoke('getInventory', ...args),
-    getInventoryById: (...args: Parameters<GetInventoryById>) => ipcRenderer.invoke('getInventoryById', ...args)
+    getInventoryById: (...args: Parameters<GetInventoryById>) => ipcRenderer.invoke('getInventoryById', ...args),
+    createCreditDebitNote: (...args: Parameters<CreateCreditDebitNote>) => ipcRenderer.invoke('createCreditDebitNote', ...args),
+    writeCreditDebitNote: (...args: Parameters<WriteCreditDebitNote>) => ipcRenderer.invoke('writeCreditDebitNote', ...args),
+    getCreditDebitNotes: (...args: Parameters<GetCreditDebitNotes>) => ipcRenderer.invoke('getCreditDebitNotes', ...args),
   })
 } catch (error) {
   console.error(error)
