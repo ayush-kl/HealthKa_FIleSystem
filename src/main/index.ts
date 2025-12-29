@@ -1,12 +1,15 @@
 import { createInventory, createInvoice, deleteInvoice, getInvoiceById, getInvoices, readInvoice, writeInvoice,getInventory,getInventoryById } from '@/lib'
 import { electronApp, is, optimizer } from '@electron-toolkit/utils'
 // import { CreateNote, DeleteNote, GetNotes, ReadNote, WriteNote } from '@shared/types'
-import { CreateInvoice, DeleteInvoice, GetInvoices, ReadInvoice, WriteInvoice,GetInvoiceById,CreateInventory,GetInventory,GetInventoryById,CreateCreditDebitNote,WriteCreditDebitNote, GetCreditDebitNotes } from '@shared/types'
+import { CreateInvoice, DeleteInvoice, GetInvoices, ReadInvoice, WriteInvoice,GetInvoiceById,CreateInventory,GetInventory,GetInventoryById,CreateCreditDebitNote,WriteCreditDebitNote, GetCreditDebitNotes,GetReceiveMaterialById,CreateReceiveMaterial,WriteReceiveMaterial,GetReceiveMaterials } from '@shared/types'
 import { BrowserWindow, app, ipcMain, shell } from 'electron'
 import { join } from 'path'
 import icon from '../../resources/icon.png?asset'
 import { createCreditDebitNote,getCreditDebitNotes,writeCreditDebitNote } from './lib/creditdebit'
-
+import { getReceiveMaterialById } from './lib/receiveMaterial'
+import { createReceiveMaterial } from './lib/receiveMaterial'
+import { writeReceiveMaterial } from './lib/receiveMaterial'
+import { getReceiveMaterials } from './lib/receiveMaterial' 
 function createWindow(): void {
   // Create the browser window.
   const mainWindow = new BrowserWindow({
@@ -76,8 +79,14 @@ app.whenReady().then(() => {
     const convertedArgs = args ? { ...args, fromDate: args.fromDate ? Number(args.fromDate) : undefined, toDate: args.toDate ? Number(args.toDate) : undefined } : undefined
     return getCreditDebitNotes(convertedArgs)
   })
+  ipcMain.handle('createReceiveMaterial', (_, ...args: Parameters<CreateReceiveMaterial>) => createReceiveMaterial(...args))
+  ipcMain.handle('writeReceiveMaterial', (_, ...args: Parameters<WriteReceiveMaterial>) => writeReceiveMaterial(...args))
+  ipcMain.handle('getReceiveMaterials', (_, args: Parameters<GetReceiveMaterials>[0]) => {
+    const convertedArgs = args ? { ...args, fromDate: args.fromDate ? Number(args.fromDate) : undefined, toDate: args.toDate ? Number(args.toDate) : undefined } : undefined
+    return getReceiveMaterials(convertedArgs)
+  })
+  ipcMain.handle('getReceiveMaterialById', (_, ...args: Parameters<GetReceiveMaterialById>) => getReceiveMaterialById(...args))
 
-  
   createWindow()
 
   app.on('activate', function () {

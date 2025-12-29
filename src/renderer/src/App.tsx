@@ -12,7 +12,10 @@ import CreateCreditDebitNote from './components/DebitCreditNote/CreateBooking'
 import CreditDebitNoteSearch from './components/DebitCreditNote/GetDebitCredit'
 import CreditDebitNoteList from './components/DebitCreditNote/DebitCreditNoteList'
 import CreditDebitNoteView from './components/DebitCreditNote/CreditDebitDetail'
-
+import CreateReceiveMaterial from './components/ReceiveMaterial/CreateReceiveMaterial'
+import ReceiveMaterialSearch from './components/ReceiveMaterial/GetReceiveMaterial'
+import ReceiveMaterialView from './components/ReceiveMaterial/ReceiveMaterialDetail'
+import ReceiveMaterialList from './components/ReceiveMaterial/ReceiveMaterialList'
 const App = () => {
   return (
   
@@ -35,8 +38,26 @@ const App = () => {
 <Route path="/inventory/credit-debit/search" element={<CreditDebitNoteSearch />} />
 <Route path="/credit-debit-notes/list" element={<CreditDebitNoteList />} />
 <Route path="/credit-debit-notes/view" element={<CreditDebitNoteView />} />
+ <Route
+        path="/inventory/receive-material/create"
+        element={<CreateReceiveMaterial />}
+      />
+      <Route
+  path="/inventory/receive-material/search"
+  element={<ReceiveMaterialSearch />}
+/>
+<Route
+  path="/inventory/receive-material/view"
+  element={<ReceiveMaterialView />}
+/>
+<Route
+  path="/inventory/receive-material/list"
+  element={<ReceiveMaterialList />}
+/>
+
 
       </Routes>
+
 
     </HashRouter>
     

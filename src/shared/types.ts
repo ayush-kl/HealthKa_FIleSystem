@@ -24,3 +24,13 @@ export type GetCreditDebitNotes = (filters?: {
   fromDate?: string
   toDate?: string
 }) => Promise<any[]>
+export type GetReceiveMaterialById = (
+  id: string
+) => Promise<any | null>  
+export type CreateReceiveMaterial = (payload: any) => Promise<string>
+export type WriteReceiveMaterial = (id: string, payload: any) => Promise<void>
+export type GetReceiveMaterials = (filters?: {
+  materialId?: string
+  fromDate?: string
+  toDate?: string
+}) => Promise<any[]>

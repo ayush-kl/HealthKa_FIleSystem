@@ -11,6 +11,7 @@ const InventoryHome: React.FC = () => {
           Inventory Management
         </h2>
 
+        {/* INVENTORY */}
         <button
           onClick={() => navigate('/inventory/list')}
           className="w-full py-2 text-sm font-medium text-white bg-pink-500 rounded-md hover:opacity-90"
@@ -25,8 +26,22 @@ const InventoryHome: React.FC = () => {
           Create Inventory
         </button>
 
-        {/* NEW BUTTONS */}
+        {/* RECEIVE MATERIAL */}
+        <button
+          onClick={() => navigate('/inventory/receive-material/create')}
+          className="w-full py-2 text-sm font-medium text-white bg-purple-600 rounded-md hover:opacity-90"
+        >
+          Create Receive Material
+        </button>
 
+        <button
+          onClick={() => navigate('/inventory/receive-material/search')}
+          className="w-full py-2 text-sm font-medium text-white bg-indigo-600 rounded-md hover:opacity-90"
+        >
+          Get Receive Materials
+        </button>
+
+        {/* CREDIT / DEBIT */}
         <button
           onClick={() => navigate('/inventory/credit-debit/create')}
           className="w-full py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:opacity-90"

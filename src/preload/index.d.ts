@@ -17,6 +17,10 @@ declare global {
       createCreditDebitNote: CreateCreditDebitNote
       writeCreditDebitNote: WriteCreditDebitNote
       getCreditDebitNotes: GetCreditDebitNotes
+      createReceiveMaterial: CreateReceiveMaterial
+      writeReceiveMaterial: WriteReceiveMaterial
+      getReceiveMaterials: GetReceiveMaterials
+      getReceiveMaterialById: GetReceiveMaterialById  
     }
   }
 }
