@@ -28,7 +28,8 @@ db.prepare(`
     createdAt INTEGER,
     patientName TEXT,
     mobile TEXT,
-    data TEXT
+    data TEXT,
+    isSynced BOOLEAN DEFAULT FALSE
   )
 `).run()
 db.prepare(`
@@ -42,27 +43,51 @@ db.prepare(`
     rack TEXT,
     productType TEXT,
     createdAt INTEGER,
-    updatedAt INTEGER
+    updatedAt INTEGER,
+    isSynced BOOLEAN DEFAULT FALSE
   )
 `).run()
 
 /* ----------------------------------
    CREATE INVOICE
 ---------------------------------- */
+/* ----------------------------------
+   CREATE INVOICE TEMPLATE
+---------------------------------- */
 
 export const createInvoice = (data: any = {}) => {
   const id = `invoice-${Date.now()}`
   const createdAt = Date.now()
 
+  const payload = {
+    id,
+    createdAt,
+    templateName: data.templateName || '',
+    pharmacyEnabled: data.pharmacyEnabled ?? true,
+    drugLicenseEnabled: data.drugLicenseEnabled ?? true,
+    patientEnabled: data.patientEnabled ?? true,
+    itemEnabled: data.itemEnabled ?? true,
+    gstEnabled: data.gstEnabled ?? false,
+    paymentEnabled: data.paymentEnabled ?? true,
+    declarationEnabled: data.declarationEnabled ?? true,
+
+    // 🔥 full config saved safely
+    config: data
+  }
+
   db.prepare(`
-    INSERT INTO invoices (id, createdAt, patientName, mobile, data)
-    VALUES (?, ?, ?, ?, ?)
+    INSERT INTO invoices (
+      id,
+      createdAt,
+      templateName,
+      data
+    )
+    VALUES (?, ?, ?, ?)
   `).run(
     id,
     createdAt,
-    data.patientName || '',
-    data.mobile || '',
-    JSON.stringify({ id, createdAt, ...data })
+    payload.templateName,
+    JSON.stringify(payload)
   )
 
   return id
@@ -114,56 +139,63 @@ const normalizeDate = (d?: string) => {
 /* ----------------------------------
    GET INVOICES (FILTERS)
 ---------------------------------- */
-export const getInvoices = (
-  date?: string,
-  filters?: {
-    patientname?: string
-    mobile?: string
-    invoiceNo?: string
+export function getInvoices(filters ?: {
+  billId?: string
+  patientName?: string
+  phoneNumber?: string
+  billDate?: string
+}) {
+  let query = `
+    SELECT *
+    FROM invoices
+    WHERE 1 = 1
+  `
+  const params: any[] = []
+
+  if (filters?.billId) {
+    query += ` AND json_extract(data, '$.bill_number') LIKE ?`
+    params.push(`%${filters.billId}%`)
   }
-) => {
-  const rows = db
-    .prepare(`SELECT * FROM invoices ORDER BY createdAt DESC`)
-    .all()
 
-  const searchDate = normalizeDate(date)
+  if (filters?.patientName) {
+    query += ` AND patientName LIKE ?`
+    params.push(`%${filters.patientName}%`)
+  }
 
-  const filtered = rows.filter((row: any) => {
+  if (filters?.phoneNumber) {
+    query += ` AND mobile LIKE ?`
+    params.push(`%${filters.phoneNumber}%`)
+  }
+
+  if (filters?.billDate) {
+    query += ` AND json_extract(data, '$.bill_date') = ?`
+    params.push(filters.billDate)
+  }
+
+  query += ` ORDER BY createdAt DESC`
+
+  const rows = db.prepare(query).all(...params)
+
+  return rows.map((row: any) => {
     const data = JSON.parse(row.data)
 
-    // ✅ DATE (FIXED)
-    if (searchDate && data.date !== searchDate) return false
-
-    // ✅ INVOICE NO
-    if (filters?.invoiceNo) {
-      if (!data.invoiceNo?.includes(filters.invoiceNo)) return false
+    return {
+      id: row.id,
+      bill_number: data.bill_number,
+      patient_name: row.patientName,
+      patient_phone: row.mobile,
+      total_amount: data.total_amount,
+      payment_status: data.payment_status,
+      bill_date: data.bill_date,
+      created_at: row.createdAt
     }
-
-    // ✅ PATIENT NAME
-    if (filters?.patientname) {
-      const name =
-        data.billPharmacy?.[0]?.patientname?.toLowerCase() || ''
-      if (!name.includes(filters.patientname.toLowerCase())) return false
-    }
-
-    // ✅ MOBILE
-    if (filters?.mobile) {
-      const mobile =
-        data.billPharmacy?.[0]?.phoneNumber || ''
-      if (!mobile.includes(filters.mobile)) return false
-    }
-
-    return true
   })
-
-  return filtered.map((row: any) => ({
-    title: row.id,
-    lastEditTime: row.createdAt,
-    data: JSON.parse(row.data)
-  }))
 }
 
-export const getInvoiceById = (id: string) => {
+/* -----------------------------
+   GET INVOICE BY ID
+-------------------------------- */
+export function getInvoiceById(id: string) {
   const row = db
     .prepare(`SELECT * FROM invoices WHERE id = ?`)
     .get(id)
@@ -171,11 +203,11 @@ export const getInvoiceById = (id: string) => {
   if (!row) return null
 
   return {
-    title: row.id,
-    lastEditTime: row.createdAt,
-    data: JSON.parse(row.data)
+    id: row.id,
+    ...JSON.parse(row.data)
   }
 }
+
 
 /* ----------------------------------
    DELETE INVOICE

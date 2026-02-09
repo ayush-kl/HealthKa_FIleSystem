@@ -16,6 +16,10 @@ import CreateReceiveMaterial from './components/ReceiveMaterial/CreateReceiveMat
 import ReceiveMaterialSearch from './components/ReceiveMaterial/GetReceiveMaterial'
 import ReceiveMaterialView from './components/ReceiveMaterial/ReceiveMaterialDetail'
 import ReceiveMaterialList from './components/ReceiveMaterial/ReceiveMaterialList'
+import CreateDistributor from './components/Distributor/CreateDistributor'
+import DistributorView from './components/Distributor/DistributorDetail'
+import DistributorList from './components/Distributor/DistributorList'
+import DistributorSearch from './components/Distributor/GetDistributor'
 const App = () => {
   return (
   
@@ -55,7 +59,12 @@ const App = () => {
   element={<ReceiveMaterialList />}
 />
 
-
+ <Route path="/distributor">
+        <Route path="search" element={<DistributorSearch />} />
+        <Route path="list" element={<DistributorList />} />
+        <Route path="view" element={<DistributorView />} />
+        <Route path="create" element={<CreateDistributor />} />
+      </Route>
       </Routes>
 
 

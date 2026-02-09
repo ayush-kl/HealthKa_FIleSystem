@@ -1,4 +1,4 @@
-import { db } from './index'
+import { db } from "./index"
 
 /* ----------------------------------
    TABLE INIT : RECEIVE MATERIAL
@@ -7,48 +7,77 @@ db.prepare(`
   CREATE TABLE IF NOT EXISTS receive_material (
     id TEXT PRIMARY KEY,
 
-    -- Purchase Details
+    -- Order Details (used for search/filter)
     purchaseId TEXT NOT NULL,
+    vendorName TEXT NOT NULL,
     paymentStatus TEXT,
     deliveryStatus TEXT,
-    vendorName TEXT,
 
     -- Metadata
     createdAt INTEGER,
     updatedAt INTEGER,
+    isSynced BOOLEAN DEFAULT FALSE,
 
-    -- Complete structured payload (products, gst, qty, etc.)
-    data TEXT
+    -- Full frontend payload (orders + items)
+    data TEXT NOT NULL
   )
 `).run()
 
 /* ----------------------------------
    CREATE RECEIVE MATERIAL
 ---------------------------------- */
-export const createReceiveMaterial = (data: any) => {
-  const id = `RM-${Date.now()}`
+/**
+ * Expects payload EXACTLY as frontend sends:
+ * {
+ *   orderDetails: [{
+ *     purchase_order_id,
+ *     vendor_name,
+ *     payment_status,
+ *     delivery_status
+ *   }],
+ *   itemDetails: [{
+ *     item_id,
+ *     item_name,
+ *     received_quantity,
+ *     category,
+ *     unit,
+ *     remark
+ *   }]
+ * }
+ */
+export const createReceiveMaterial = (payload: any) => {
+  if (!payload?.orderDetails?.length) {
+    throw new Error("Order details are required")
+  }
+
+  if (!payload?.itemDetails?.length) {
+    throw new Error("Item details are required")
+  }
+
+  const order = payload.orderDetails[0] // frontend allows multiple, backend stores one
   const now = Date.now()
+  const id = `RM-${now}`
 
   db.prepare(`
     INSERT INTO receive_material (
       id,
       purchaseId,
+      vendorName,
       paymentStatus,
       deliveryStatus,
-      vendorName,
       createdAt,
       updatedAt,
       data
     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
   `).run(
     id,
-    data.purchaseDetails?.purchaseId || '',
-    data.purchaseDetails?.paymentStatus || '',
-    data.purchaseDetails?.deliveryStatus || '',
-    data.purchaseDetails?.vendorName || '',
+    order.purchase_order_id || "",
+    order.vendor_name || "",
+    order.payment_status || "Pending",
+    order.delivery_status || "Completed",
     now,
     now,
-    JSON.stringify(data)
+    JSON.stringify(payload)
   )
 
   return id
@@ -57,23 +86,32 @@ export const createReceiveMaterial = (data: any) => {
 /* ----------------------------------
    UPDATE / WRITE RECEIVE MATERIAL
 ---------------------------------- */
+/**
+ * content = JSON.stringify(payload from frontend)
+ */
 export const writeReceiveMaterial = (id: string, content: string) => {
   const parsed = JSON.parse(content)
+
+  if (!parsed?.orderDetails?.length) {
+    throw new Error("Order details missing")
+  }
+
+  const order = parsed.orderDetails[0]
 
   db.prepare(`
     UPDATE receive_material SET
       purchaseId = ?,
+      vendorName = ?,
       paymentStatus = ?,
       deliveryStatus = ?,
-      vendorName = ?,
       updatedAt = ?,
       data = ?
     WHERE id = ?
   `).run(
-    parsed.purchaseDetails?.purchaseId || '',
-    parsed.purchaseDetails?.paymentStatus || '',
-    parsed.purchaseDetails?.deliveryStatus || '',
-    parsed.purchaseDetails?.vendorName || '',
+    order.purchase_order_id || "",
+    order.vendor_name || "",
+    order.payment_status || "Pending",
+    order.delivery_status || "Completed",
     Date.now(),
     JSON.stringify(parsed),
     id
@@ -81,7 +119,7 @@ export const writeReceiveMaterial = (id: string, content: string) => {
 }
 
 /* ----------------------------------
-   GET RECEIVE MATERIAL (FILTERS)
+   GET RECEIVE MATERIALS (FILTERS)
 ---------------------------------- */
 export const getReceiveMaterials = (filters?: {
   purchaseId?: string
@@ -119,12 +157,12 @@ export const getReceiveMaterials = (filters?: {
   return rows.map((row: any) => ({
     id: row.id,
     purchaseId: row.purchaseId,
+    vendorName: row.vendorName,
     paymentStatus: row.paymentStatus,
     deliveryStatus: row.deliveryStatus,
-    vendorName: row.vendorName,
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
-    data: JSON.parse(row.data)
+    data: JSON.parse(row.data), // contains orderDetails + itemDetails exactly as frontend
   }))
 }
 
@@ -141,11 +179,11 @@ export const getReceiveMaterialById = (id: string) => {
   return {
     id: row.id,
     purchaseId: row.purchaseId,
+    vendorName: row.vendorName,
     paymentStatus: row.paymentStatus,
     deliveryStatus: row.deliveryStatus,
-    vendorName: row.vendorName,
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
-    data: JSON.parse(row.data)
+    data: JSON.parse(row.data),
   }
 }

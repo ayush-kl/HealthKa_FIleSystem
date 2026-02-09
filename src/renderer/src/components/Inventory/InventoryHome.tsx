@@ -55,6 +55,20 @@ const InventoryHome: React.FC = () => {
         >
           Get Credit / Debit Notes
         </button>
+        <button
+  onClick={() => navigate('/distributor/create')}
+  className="w-full py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:opacity-90"
+>
+  Create Distributor
+</button>
+
+<button
+  onClick={() => navigate('/distributor/search')}
+  className="w-full py-2 text-sm font-medium text-white bg-green-600 rounded-md hover:opacity-90"
+>
+  Get Distributors
+</button>
+
       </div>
     </div>
   )

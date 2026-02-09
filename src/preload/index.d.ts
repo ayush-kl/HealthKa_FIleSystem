@@ -1,4 +1,4 @@
-import { CreateNote, DeleteNote, GetNotes, ReadNote, WriteNote,GetInvoiceById,CreateInventory,GetInventory,GetInventoryById, CreateCreditDebitNote, WriteCreditDebitNote } from '@shared/types'
+import {GetBillByNuber, CreateNote, DeleteNote, GetNotes, ReadNote, WriteNote,GetInvoiceById,CreateInventory,GetInventory,GetInventoryById, CreateCreditDebitNote, WriteCreditDebitNote,GetPurchaseOrders,CreatePurchaseOrder,GetPurchaseOrderById,CreateIssueOrder,GetIssueOrders,GetIssueOrderItems,CreateCustomer,CreateCustomers,GetCustomers,GetCustomerById,SearchCustomerByPhone } from '@shared/types'
 
 declare global {
   interface Window {
@@ -21,6 +21,29 @@ declare global {
       writeReceiveMaterial: WriteReceiveMaterial
       getReceiveMaterials: GetReceiveMaterials
       getReceiveMaterialById: GetReceiveMaterialById  
+      createDistributor: CreateDistributor
+      getDistributors: GetDistributors
+      writeDistributor: WriteDistributor  
+      createPurchaseOrder: CreatePurchaseOrder
+      getPurchaseOrders: GetPurchaseOrders
+      getPurchaseOrderById: GetPurchaseOrderById
+      createIssueOrder: CreateIssueOrder
+      getIssueOrders: GetIssueOrders
+      getIssueOrderItems: GetIssueOrderItems
+      saveBillTemplate: SaveBillTemplate
+      getAllBillTemplates: GetAllBillTemplates
+      deleteBillTemplate: DeleteBillTemplate
+      getBillTemplateByUser: GetBillTemplateByUser
+      createBill: CreateBill
+      getAllBills: GetAllBills
+      getBillById: GetBillById
+      searchBills: SearchBills  
+      createCustomer: CreateCustomer
+      createCustomers: CreateCustomers
+      getCustomers: GetCustomers
+      getCustomerById: GetCustomerById
+      searchCustomerByPhone: SearchCustomerByPhone
+      getBillByNumber: GetBillByNumber
     }
   }
 }
