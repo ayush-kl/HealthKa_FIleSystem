@@ -107,10 +107,10 @@ function createWindow(): void {
 
   if (is.dev) {
     // ✅ React dev server
-   mainWindow.loadURL('http://localhost:8080')
-    //  mainWindow.loadFile(
-    //   path.join(__dirname, '../../resources/dist/index.html')
-    // )
+  // mainWindow.loadURL('http://localhost:8080')
+     mainWindow.loadFile(
+      path.join(__dirname, '../../resources/dist/index.html')
+    )
   } else {
     // ✅ React production build
     mainWindow.loadFile(
