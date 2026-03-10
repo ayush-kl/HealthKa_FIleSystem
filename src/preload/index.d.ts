@@ -1,4 +1,4 @@
-import {GetBillByNuber, CreateNote, DeleteNote, GetNotes, ReadNote, WriteNote,GetInvoiceById,CreateInventory,GetInventory,GetInventoryById, CreateCreditDebitNote, WriteCreditDebitNote,GetPurchaseOrders,CreatePurchaseOrder,GetPurchaseOrderById,CreateIssueOrder,GetIssueOrders,GetIssueOrderItems,CreateCustomer,CreateCustomers,GetCustomers,GetCustomerById,SearchCustomerByPhone } from '@shared/types'
+import {GetBillByNuber,SearchBills, GetBillTemplateByUser, GetBillById,GetAllBills, DeleteBillTemplate,GetCreditDebitNotes,CreateBill,GetBillByNumber,CreateReceiveMaterial,GetAllBillTemplates,SaveBillTemplate,WriteDistributor  ,GetDistributors, GetReceiveMaterialById,CreateDistributor,GetReceiveMaterials,WriteReceiveMaterial, CreateNote, DeleteNote, GetNotes, ReadNote, WriteNote,GetInvoiceById,CreateInventory,GetInventory,GetInventoryById, CreateCreditDebitNote, WriteCreditDebitNote,GetPurchaseOrders,CreatePurchaseOrder,GetPurchaseOrderById,CreateIssueOrder,GetIssueOrders,GetIssueOrderItems,CreateCustomer,CreateCustomers,GetCustomers,GetCustomerById,SearchCustomerByPhone } from '@shared/types'
 
 declare global {
   interface Window {
