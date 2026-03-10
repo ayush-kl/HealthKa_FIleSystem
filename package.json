@@ -1,59 +1,43 @@
-
 {
   "name": "note-mark",
   "version": "1.0.0",
   "description": "Electron Desktop App",
   "license": "MIT",
   "main": "./out/main/index.js",
-
   "scripts": {
-    "clean": "rimraf out dist electron.vite.config.*.mjs",
-    "clean:vite": "rimraf electron.vite.config.*.mjs",
-
-    "dev": "npm run clean:vite && electron-vite dev",
+    "clean": "rimraf out dist",
+    "dev": "electron-vite dev",
     "start": "electron-vite preview",
-
     "typecheck": "tsc --noEmit -p tsconfig.node.json",
-
-    "build": "npm run clean:vite && npm run typecheck && electron-vite build",
-
-    "pack": "npm run build && electron-builder --dir",
+    "build": "npm run clean && electron-vite build",
     "dist": "npm run build && electron-builder",
-
     "dist:win": "npm run build && electron-builder --win",
     "dist:mac": "npm run build && electron-builder --mac",
     "dist:linux": "npm run build && electron-builder --linux",
-
+    "pack": "npm run build && electron-builder --dir",
     "postinstall": "electron-builder install-app-deps",
-
     "lint": "eslint . --ext .ts,.js --fix",
     "format": "prettier --write ."
   },
-
   "dependencies": {
     "@electron-toolkit/preload": "^2.0.0",
     "@electron-toolkit/utils": "^2.0.0",
     "better-sqlite3": "^12.5.0",
     "fs-extra": "^11.2.0"
   },
-
   "devDependencies": {
     "@electron-toolkit/eslint-config-prettier": "^1.0.1",
     "@electron-toolkit/eslint-config-ts": "^1.0.0",
     "@electron-toolkit/tsconfig": "^1.0.1",
-
     "@types/node": "^18.17.5",
-
     "electron": "^25.9.8",
     "electron-builder": "^24.6.3",
     "electron-rebuild": "^3.2.9",
     "electron-vite": "^1.0.27",
-
     "eslint": "^8.47.0",
     "prettier": "^3.0.2",
-
     "rimraf": "^5.0.5",
-    "typescript": "^5.1.6"
+    "typescript": "^5.1.6",
+    "vite": "4"
   }
 }
-

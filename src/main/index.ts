@@ -70,7 +70,7 @@ import { createBill,
 } from './lib/bill'
 import { createPurchaseOrder,getPurchaseOrderById,getPurchaseOrders } from './lib/purchaseorder'
 import { createCustomer, createCustomers, getCustomers, getCustomerById,searchCustomerByPhone } from './lib/customers'
-import { fromJSON } from 'postcss'
+
 
 /* ---------------- WINDOW ---------------- */
 
