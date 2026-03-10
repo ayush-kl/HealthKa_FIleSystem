@@ -168,3 +168,32 @@ export const getBillByNumber = (billNumber: string): Bill | null => {
     templateSnapshot: JSON.parse(row.templateSnapshot),
   }
 }
+export const deleteBillsOlderThanThreeMonths = (): number => {
+  const threeMonthsAgo = new Date()
+  threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3)
+
+  const cutoffTimestamp = threeMonthsAgo.getTime()
+
+  const result = db.prepare(`
+    DELETE FROM bills
+    WHERE createdAt < ?
+  `).run(cutoffTimestamp)
+
+  console.log(`Deleted ${result.changes} old bills`)
+
+  return result.changes
+}
+
+  // const fiveMinutesAgo = Date.now() - (5 * 60 * 1000)
+
+  // const result = db.prepare(`
+  //   DELETE FROM bills
+  //   WHERE createdAt < ?
+  // `).run(fiveMinutesAgo)
+
+  // if (result.changes > 0) {
+  //   db.prepare("VACUUM").run() // shrink database file
+  // }
+
+  // console.log(`Deleted ${result.changes} bills older than 5 minutes`)
+  // return result.changes

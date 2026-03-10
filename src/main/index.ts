@@ -65,7 +65,8 @@ import { createBill,
   getAllBills,
   getBillById,
   searchBills,
-  getBillByNumber
+  getBillByNumber,
+  deleteBillsOlderThanThreeMonths
 } from './lib/bill'
 import { createPurchaseOrder,getPurchaseOrderById,getPurchaseOrders } from './lib/purchaseorder'
 import { createCustomer, createCustomers, getCustomers, getCustomerById,searchCustomerByPhone } from './lib/customers'
@@ -107,10 +108,10 @@ function createWindow(): void {
 
   if (is.dev) {
     // ✅ React dev server
-  // mainWindow.loadURL('http://localhost:8080')
-     mainWindow.loadFile(
-      path.join(__dirname, '../../resources/dist/index.html')
-    )
+ mainWindow.loadURL('http://localhost:8080')
+    //  mainWindow.loadFile(
+    //   path.join(__dirname, '../../resources/dist/index.html')
+    // )
   } else {
     // ✅ React production build
     mainWindow.loadFile(
@@ -289,6 +290,12 @@ ipcMain.handle('saveBillTemplate', (_event, payload) => {
     // @ts-ignore
     getBillByNumber(...args)
   )
+   deleteBillsOlderThanThreeMonths()
+
+  setInterval(() => {
+    deleteBillsOlderThanThreeMonths()
+  }, 24 * 60 * 60 * 1000)
+
   createWindow()
 
   app.on('activate', () => {
