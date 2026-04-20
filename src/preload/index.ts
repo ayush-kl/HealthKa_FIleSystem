@@ -1,11 +1,5 @@
-import { saveBillTemplate } from '@/lib/billtemplate'
-import { writeCreditDebitNote } from '@/lib/creditdebit'
-import { getPurchaseOrderById } from '@/lib/purchaseorder'
-import { CreateInvoice, DeleteInvoice, GetInvoices, ReadInvoice, WriteInvoice,GetInvoiceById,CreateInventory, GetInventoryById, GetInventory, CreateCreditDebitNote, WriteCreditDebitNote, GetCreditDebitNotes, GetReceiveMaterialById, GetReceiveMaterials, WriteReceiveMaterial,CreateReceiveMaterial, CreateDistributor,GetDistributors,WriteDistributor, CreatePurchaseOrder, GetPurchaseOrders, GetPurchaseOrderById,CreateIssueOrder,GetIssueOrderItems,GetIssueOrders, GetBillTemplateById, DeleteBillTemplate, GetAllBillTemplates, SaveBillTemplate, GetAllBills, GetBillById, SearchBills,SearchCustomerByPhone, GetBillByNumber } from '@shared/types'
-import { CreateCustomer, CreateCustomers, GetCustomers, GetCustomerById } from '@shared/types'
-import { create } from 'domain'
-import { contextBridge, ipcRenderer } from 'electron'
-import { get } from 'http'
+import { CreateCreditDebitNote, CreateCustomer, CreateCustomers, CreateDistributor, CreateInventory, CreateInvoice, CreateIssueOrder, CreatePurchaseOrder, CreateReceiveMaterial, DeleteBillTemplate, DeleteInvoice, GetAllBills, GetAllBillTemplates, GetBillById, GetBillByNumber, GetBillTemplateById, GetCreditDebitNotes, GetCustomerById, GetCustomers, GetDistributors, GetInventory, GetInventoryById, GetInvoiceById, GetInvoices, GetIssueOrderItems, GetIssueOrders, GetPurchaseOrderById, GetPurchaseOrders, GetReceiveMaterialById, GetReceiveMaterials, ReadInvoice, SearchBills, SearchCustomerByPhone, WriteCreditDebitNote, WriteDistributor, WriteInvoice, WriteReceiveMaterial } from '@shared/types';
+import { contextBridge, ipcRenderer } from 'electron';
 
 if (!process.contextIsolated) {
   throw new Error('contextIsolation must be enabled in the BrowserWindow')
@@ -54,7 +48,31 @@ try {
     getCustomers: (...args: Parameters<GetCustomers>) => ipcRenderer.invoke('getCustomers', ...args),
     getCustomerById: (...args: Parameters<GetCustomerById>) => ipcRenderer.invoke('getCustomerById', ...args),
     searchCustomerByPhone: (...args: Parameters<SearchCustomerByPhone>) => ipcRenderer.invoke('searchCustomerByPhone', ...args),
-    getBillByNumber: (...args: Parameters<GetBillByNumber>) => ipcRenderer.invoke('getBillByNumber', ...args)
+    getBillByNumber: (...args: Parameters<GetBillByNumber>) => ipcRenderer.invoke('getBillByNumber', ...args),
+
+    // Unsynced data functions
+    getUnsyncedInvoices: () => ipcRenderer.invoke('getUnsyncedInvoices'),
+    getUnsyncedInventory: () => ipcRenderer.invoke('getUnsyncedInventory'),
+    getUnsyncedCreditDebitNotes: () => ipcRenderer.invoke('getUnsyncedCreditDebitNotes'),
+    getUnsyncedReceiveMaterials: () => ipcRenderer.invoke('getUnsyncedReceiveMaterials'),
+    getUnsyncedDistributors: () => ipcRenderer.invoke('getUnsyncedDistributors'),
+    getUnsyncedPurchaseOrders: () => ipcRenderer.invoke('getUnsyncedPurchaseOrders'),
+    getUnsyncedIssueOrders: () => ipcRenderer.invoke('getUnsyncedIssueOrders'),
+    getUnsyncedBillTemplates: () => ipcRenderer.invoke('getUnsyncedBillTemplates'),
+    getUnsyncedBills: () => ipcRenderer.invoke('getUnsyncedBills'),
+    getUnsyncedCustomers: () => ipcRenderer.invoke('getUnsyncedCustomers'),
+
+    // Update sync status functions
+    updateInvoicesSyncStatus: (ids: string[]) => ipcRenderer.invoke('updateInvoicesSyncStatus', ids),
+    updateInventorySyncStatus: (ids: string[]) => ipcRenderer.invoke('updateInventorySyncStatus', ids),
+    updateCreditDebitNotesSyncStatus: (ids: string[]) => ipcRenderer.invoke('updateCreditDebitNotesSyncStatus', ids),
+    updateReceiveMaterialsSyncStatus: (ids: string[]) => ipcRenderer.invoke('updateReceiveMaterialsSyncStatus', ids),
+    updateDistributorsSyncStatus: (ids: string[]) => ipcRenderer.invoke('updateDistributorsSyncStatus', ids),
+    updatePurchaseOrdersSyncStatus: (ids: string[]) => ipcRenderer.invoke('updatePurchaseOrdersSyncStatus', ids),
+    updateIssueOrdersSyncStatus: (ids: string[]) => ipcRenderer.invoke('updateIssueOrdersSyncStatus', ids),
+    updateBillTemplatesSyncStatus: (ids: string[]) => ipcRenderer.invoke('updateBillTemplatesSyncStatus', ids),
+    updateBillsSyncStatus: (ids: string[]) => ipcRenderer.invoke('updateBillsSyncStatus', ids),
+    updateCustomersSyncStatus: (ids: string[]) => ipcRenderer.invoke('updateCustomersSyncStatus', ids)
   })
 } catch (error) {
   console.error(error)

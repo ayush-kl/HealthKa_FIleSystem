@@ -25,6 +25,8 @@ db.prepare(`
     items TEXT NOT NULL,
     templateSnapshot TEXT NOT NULL,
 
+    isSynced BOOLEAN DEFAULT FALSE,
+
     createdAt INTEGER NOT NULL
   )
 `).run()
@@ -168,3 +170,26 @@ export const getBillByNumber = (billNumber: string): Bill | null => {
     templateSnapshot: JSON.parse(row.templateSnapshot),
   }
 }
+export const getUnsyncedBills = (): Bill[] => {
+  const rows = db.prepare(`
+    SELECT * FROM bills
+    WHERE isSynced = 0
+    ORDER BY createdAt DESC
+  `).all() as any[]
+
+  return rows.map(row => ({
+    ...row,
+    items: JSON.parse(row.items),
+    templateSnapshot: JSON.parse(row.templateSnapshot),
+  }))
+}
+
+export const updateBillsSyncStatus = (ids: string[]) => {
+  if (!ids || ids.length === 0) {
+    return;
+  }
+  const placeholders = ids.map(() => '?').join(',');
+  const query = `UPDATE bills SET isSynced = TRUE WHERE id IN (${placeholders})`;
+  db.prepare(query).run(...ids);
+  console.log(`Updated sync status for bills: ${ids.join(', ')}`);
+};

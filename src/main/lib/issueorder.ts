@@ -176,3 +176,41 @@ export const deleteIssueOrder = (id: string) => {
   db.prepare(`DELETE FROM issue_order_items WHERE issueOrderId = ?`).run(id)
   db.prepare(`DELETE FROM issue_orders WHERE id = ?`).run(id)
 }
+
+export const getUnsyncedIssueOrders = () => {
+  const query = `SELECT * FROM issue_orders WHERE isSynced = ?`
+  const rows = db.prepare(query).all(0)
+
+  return rows.map((row: any) => {
+    const items = db
+      .prepare(`SELECT * FROM issue_order_items WHERE issueOrderId = ?`)
+      .all(row.id)
+
+    return {
+      id: row.id,
+      employee_type: row.employeeType,
+      employee_name: row.employeeName,
+      issue_date: row.issueDate,
+      remark: row.remark,
+      createdAt: row.createdAt,
+      data: row.data,
+      items: items.map((i: any) => ({
+        id: i.id,
+        item_id: i.itemId,
+        item_name: i.itemName,
+        quantity: i.quantity,
+        remark: i.remark
+      }))
+    }
+  })
+}
+
+export const updateIssueOrdersSyncStatus = (ids: string[]) => {
+  if (!ids || ids.length === 0) {
+    return
+  }
+  const placeholders = ids.map(() => "?").join(",")
+  const query = `UPDATE issue_orders SET isSynced = TRUE WHERE id IN (${placeholders})`
+  db.prepare(query).run(...ids);
+  console.log(`Updated sync status for issue orders: ${ids.join(", ")}`)
+}

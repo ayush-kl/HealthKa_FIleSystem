@@ -1,7 +1,7 @@
-import { ensureDirSync } from 'fs-extra'
-import { dialog, app } from 'electron'
-import path from 'path'
 import Database from 'better-sqlite3'
+import { app, dialog } from 'electron'
+import { ensureDirSync } from 'fs-extra'
+import path from 'path'
 
 /* ----------------------------------
    CONFIG
@@ -316,3 +316,55 @@ export const getInventoryById = (id: string) => {
     .prepare(`SELECT * FROM Inventory WHERE id = ?`)
     .get(id)
 }
+
+export const getUnsyncedInvoices = () => {
+  const query = `SELECT * FROM invoices WHERE isSynced = ?`;
+  const rows = db.prepare(query).all(0);
+
+  return rows.map((row: any) => {
+    const data = JSON.parse(row.data);
+    return {
+      id: row.id,
+      ...data,
+      createdAt: row.createdAt,
+      data: row.data
+    };
+  });
+};
+
+export const getUnsyncedInventory = () => {
+  const query = `SELECT * FROM Inventory WHERE isSynced = ?`;
+  const rows = db.prepare(query).all(0);
+
+  return rows.map((row: any) => ({
+    id: row.id,
+    name: row.name,
+    category: row.category,
+    batchNo: row.batchNo,
+    unit: row.unit,
+    minStock: row.minStock,
+    rack: row.rack,
+    productType: row.productType,
+    createdAt: row.createdAt,
+    updatedAt: row.updatedAt
+  }));
+};
+
+export const updateInvoicesSyncStatus = (ids: string[]) => {
+  if (!ids || ids.length === 0) {
+    return;
+  }
+  const placeholders = ids.map(() => '?').join(',');
+  const query = `UPDATE invoices SET isSynced = TRUE WHERE id IN (${placeholders})`;
+  db.prepare(query).run(...ids);
+};
+
+export const updateInventorySyncStatus = (ids: string[]) => {
+  if (!ids || ids.length === 0) {
+    return;
+  }
+  const placeholders = ids.map(() => '?').join(',');
+  const query = `UPDATE Inventory SET isSynced = TRUE WHERE id IN (${placeholders})`;
+  db.prepare(query).run(...ids);
+  console.log(`Updated sync status for inventory items: ${ids.join(', ')}`);
+};

@@ -1,75 +1,89 @@
+import { electronApp, is, optimizer } from '@electron-toolkit/utils'
 import { app, BrowserWindow, ipcMain, shell } from 'electron'
 import path, { join } from 'path'
-import { electronApp, is, optimizer } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
 
 /* ---------------- IPC IMPORTS ---------------- */
-import { createIssueOrder,getIssueOrderItems,getIssueOrders } from './lib/issueorder'
 import {
   createInventory,
   createInvoice,
   deleteInvoice,
+  getInventory,
+  getInventoryById,
   getInvoiceById,
   getInvoices,
+  getUnsyncedInventory,
+  getUnsyncedInvoices,
   readInvoice,
-  writeInvoice,
-  getInventory,
-  getInventoryById
+  updateInventorySyncStatus,
+  updateInvoicesSyncStatus,
+  writeInvoice
 } from '@/lib'
 import {
-  saveBillTemplate,
   getAllBillTemplates,
-  getBillTemplateByUser
+  getBillTemplateByUser,
+  getUnsyncedBillTemplates,
+  saveBillTemplate,
+  updateBillTemplatesSyncStatus
 } from '@/lib/billtemplate'
 import {
-  CreateInvoice,
-  DeleteInvoice,
-  GetInvoices,
-  ReadInvoice,
-  WriteInvoice,
-  GetInvoiceById,
+  CreateCreditDebitNote,
+  CreateDistributor,
   CreateInventory,
+  CreateInvoice,
+  CreateReceiveMaterial,
+  DeleteInvoice,
+  GetCreditDebitNotes,
+  GetDistributors,
   GetInventory,
   GetInventoryById,
-  CreateCreditDebitNote,
-  WriteCreditDebitNote,
-  GetCreditDebitNotes,
+  GetInvoiceById,
+  GetInvoices,
   GetReceiveMaterialById,
-  CreateReceiveMaterial,
-  WriteReceiveMaterial,
   GetReceiveMaterials,
-  GetDistributors,
-  CreateDistributor,
-  WriteDistributor
+  ReadInvoice,
+  WriteCreditDebitNote,
+  WriteDistributor,
+  WriteInvoice,
+  WriteReceiveMaterial
 } from '@shared/types'
+import { createIssueOrder, getIssueOrderItems, getIssueOrders, getUnsyncedIssueOrders, updateIssueOrdersSyncStatus } from './lib/issueorder'
 
 import {
   createCreditDebitNote,
   getCreditDebitNotes,
+  getUnsyncedCreditDebitNotes,
+  updateCreditDebitNotesSyncStatus,
   writeCreditDebitNote
 } from './lib/creditdebit'
 
 import {
-  getReceiveMaterialById,
   createReceiveMaterial,
-  writeReceiveMaterial,
-  getReceiveMaterials
+  getReceiveMaterialById,
+  getReceiveMaterials,
+  getUnsyncedReceiveMaterials,
+  updateReceiveMaterialsSyncStatus,
+  writeReceiveMaterial
 } from './lib/receiveMaterial'
 
 import {
-  createDistributor,
-  getDistributors,
-  writeDistributor
-} from './lib/distributor'
-import { createBill,
+  createBill,
   getAllBills,
   getBillById,
+  getBillByNumber,
+  getUnsyncedBills,
   searchBills,
-  getBillByNumber
+  updateBillsSyncStatus
 } from './lib/bill'
-import { createPurchaseOrder,getPurchaseOrderById,getPurchaseOrders } from './lib/purchaseorder'
-import { createCustomer, createCustomers, getCustomers, getCustomerById,searchCustomerByPhone } from './lib/customers'
-import { fromJSON } from 'postcss'
+import { createCustomer, createCustomers, getCustomerById, getCustomers, getUnsyncedCustomers, searchCustomerByPhone, updateCustomersSyncStatus } from './lib/customers'
+import {
+  createDistributor,
+  getDistributors,
+  getUnsyncedDistributors,
+  updateDistributorsSyncStatus,
+  writeDistributor
+} from './lib/distributor'
+import { createPurchaseOrder, getPurchaseOrderById, getPurchaseOrders, getUnsyncedPurchaseOrders, updatePurchaseOrdersSyncStatus } from './lib/purchaseorder'
 
 /* ---------------- WINDOW ---------------- */
 
@@ -107,10 +121,10 @@ function createWindow(): void {
 
   if (is.dev) {
     // ✅ React dev server
-  // mainWindow.loadURL('http://localhost:8080')
-     mainWindow.loadFile(
-      path.join(__dirname, '../../resources/dist/index.html')
-    )
+  mainWindow.loadURL('http://localhost:8080')
+    //  mainWindow.loadFile(
+    //   path.join(__dirname, '../../resources/dist/index.html')
+    // )
   } else {
     // ✅ React production build
     mainWindow.loadFile(
@@ -141,6 +155,11 @@ app.whenReady().then(() => {
   ipcMain.handle('getInventory', (_, ...args: Parameters<GetInventory>) => getInventory(...args))
   ipcMain.handle('getInventoryById', (_, ...args: Parameters<GetInventoryById>) => getInventoryById(...args))
 
+  ipcMain.handle('getUnsyncedInvoices', () => getUnsyncedInvoices())
+  ipcMain.handle('getUnsyncedInventory', () => getUnsyncedInventory())
+  ipcMain.handle('updateInvoicesSyncStatus', (_, ids: string[]) => updateInvoicesSyncStatus(ids))
+  ipcMain.handle('updateInventorySyncStatus', (_, ids: string[]) => updateInventorySyncStatus(ids))
+
   ipcMain.handle('createCreditDebitNote', (_, ...args: Parameters<CreateCreditDebitNote>) =>
     createCreditDebitNote(...args)
   )
@@ -148,6 +167,9 @@ app.whenReady().then(() => {
   ipcMain.handle('writeCreditDebitNote', (_, ...args: Parameters<WriteCreditDebitNote>) =>
     writeCreditDebitNote(...args)
   )
+
+  ipcMain.handle('getUnsyncedCreditDebitNotes', () => getUnsyncedCreditDebitNotes())
+  ipcMain.handle('updateCreditDebitNotesSyncStatus', (_, ids: string[]) => updateCreditDebitNotesSyncStatus(ids))
 
   ipcMain.handle(
   "getCreditDebitNotes",
@@ -173,6 +195,9 @@ app.whenReady().then(() => {
     writeReceiveMaterial(...args)
   )
 
+  ipcMain.handle('getUnsyncedReceiveMaterials', () => getUnsyncedReceiveMaterials())
+  ipcMain.handle('updateReceiveMaterialsSyncStatus', (_, ids: string[]) => updateReceiveMaterialsSyncStatus(ids))
+
   ipcMain.handle('getReceiveMaterials', (_, args: Parameters<GetReceiveMaterials>[0]) => {
     const convertedArgs = args
       ? {
@@ -187,6 +212,9 @@ app.whenReady().then(() => {
   ipcMain.handle('getReceiveMaterialById', (_, ...args: Parameters<GetReceiveMaterialById>) =>
     getReceiveMaterialById(...args)
   )
+
+  ipcMain.handle('getUnsyncedDistributors', () => getUnsyncedDistributors())
+  ipcMain.handle('updateDistributorsSyncStatus', (_, ids: string[]) => updateDistributorsSyncStatus(ids))
 
   ipcMain.handle('getDistributors', (_, args: Parameters<GetDistributors>[0]) => {
     const convertedArgs = args
@@ -207,6 +235,9 @@ app.whenReady().then(() => {
     createDistributor(...args)
   )
 
+  ipcMain.handle('getUnsyncedPurchaseOrders', () => getUnsyncedPurchaseOrders())
+  ipcMain.handle('updatePurchaseOrdersSyncStatus', (_, ids: string[]) => updatePurchaseOrdersSyncStatus(ids))
+
   ipcMain.handle('createPurchaseOrder', (_, ...args: any[]) =>
     // @ts-ignore
     createPurchaseOrder(...args)
@@ -219,6 +250,10 @@ app.whenReady().then(() => {
     // @ts-ignore
     getPurchaseOrderById(...args)
   )
+
+  ipcMain.handle('getUnsyncedIssueOrders', () => getUnsyncedIssueOrders())
+  ipcMain.handle('updateIssueOrdersSyncStatus', (_, ids: string[]) => updateIssueOrdersSyncStatus(ids))
+
   ipcMain.handle('createIssueOrder', (_, ...args: any[]) =>
     // @ts-ignore
     createIssueOrder(...args)
@@ -232,7 +267,11 @@ app.whenReady().then(() => {
     // @ts-ignore
     getIssueOrderItems(...args)
   )
-ipcMain.handle('saveBillTemplate', (_event, payload) => {
+
+  ipcMain.handle('getUnsyncedBillTemplates', () => getUnsyncedBillTemplates())
+  ipcMain.handle('updateBillTemplatesSyncStatus', (_, ids: string[]) => updateBillTemplatesSyncStatus(ids))
+
+ ipcMain.handle('saveBillTemplate', (_event, payload) => {
   const { templateName, config } = payload
   return saveBillTemplate(templateName, config)
 })
@@ -265,6 +304,10 @@ ipcMain.handle('saveBillTemplate', (_event, payload) => {
     // @ts-ignore
     getAllBills(...args)  
   )
+
+  ipcMain.handle('getUnsyncedBills', () => getUnsyncedBills())
+  ipcMain.handle('updateBillsSyncStatus', (_, ids: string[]) => updateBillsSyncStatus(ids))
+
   ipcMain.handle('createCustomer', (_, ...args: any[]) =>
     // @ts-ignore
     createCustomer(...args)   
@@ -277,6 +320,10 @@ ipcMain.handle('saveBillTemplate', (_event, payload) => {
     // @ts-ignore
     getCustomers(...args)
   )
+
+  ipcMain.handle('getUnsyncedCustomers', () => getUnsyncedCustomers())
+  ipcMain.handle('updateCustomersSyncStatus', (_, ids: string[]) => updateCustomersSyncStatus(ids))
+
   ipcMain.handle('getCustomerById', (_, ...args: any[]) =>
     // @ts-ignore
     getCustomerById(...args)

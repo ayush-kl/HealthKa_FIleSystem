@@ -1,5 +1,5 @@
-import { db } from "./index"
 import crypto from "crypto"
+import { db } from "./index"
 
 /* ----------------------------------
    TABLE INIT
@@ -244,4 +244,50 @@ export const writeCreditDebitNote = (
 export const deleteCreditDebitNote = (id: string) => {
   db.prepare(`DELETE FROM credit_debit_notes WHERE id = ?`).run(id)
   db.prepare(`DELETE FROM credit_debit_items WHERE noteDbId = ?`).run(id)
+}
+
+export const getUnsyncedCreditDebitNotes = () => {
+  const query = `SELECT * FROM credit_debit_notes WHERE isSynced = ?`
+  const rows = db.prepare(query).all(0)
+
+  return rows.map((row: any) => {
+    const items = db
+      .prepare(`SELECT * FROM credit_debit_items WHERE noteDbId = ?`)
+      .all(row.id)
+
+    return {
+      id: row.id,
+      note_id: row.noteId,
+      note_type: row.noteType,
+      issue_date: row.issueDate || 0,
+      purchase_order_id: row.purchaseOrderId,
+      reason: row.reason,
+      received_id: row.receivedId,
+      total: row.total,
+      vendor_name: row.vendorName,
+      createdAt: row.createdAt,
+      updatedAt: row.updatedAt,
+      data: row.data,
+      items: items.map((i: any) => ({
+        id: i.id,
+        name: i.itemName,
+        quantity: i.quantity,
+        unit: i.unit,
+        price: i.price,
+        batchNo: i.batchNo,
+        gst: i.gst,
+        reason: i.reason
+      }))
+    }
+  })
+}
+
+export const updateCreditDebitNotesSyncStatus = (ids: string[]) => {
+  if (!ids || ids.length === 0) {
+    return
+  }
+  const placeholders = ids.map(() => '?').join(',')
+  const query = `UPDATE credit_debit_notes SET isSynced = TRUE WHERE id IN (${placeholders})`
+  db.prepare(query).run(...ids);
+  console.log(`Updated sync status for credit/debit notes: ${ids.join(', ')}`)
 }

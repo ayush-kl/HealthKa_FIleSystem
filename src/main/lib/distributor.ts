@@ -126,6 +126,40 @@ export const getDistributors = (filters?: {
 }
 
 /* ----------------------------------
+   GET UNSYNCED DISTRIBUTORS
+---------------------------------- */
+export const getUnsyncedDistributors = () => {
+  const query = `SELECT * FROM distributors WHERE isSynced = ?`
+  const rows = db.prepare(query).all(0)
+
+  // ⬇️ map DB → UI
+  return rows.map((row: any) => ({
+    id: row.id,
+    supplier_name: row.supplierName,
+    phone_number: row.phoneNumber,
+    email: row.email,
+    address: row.address,
+    remark: row.remark,
+    createdAt: row.createdAt,
+    updatedAt: row.updatedAt,
+    data: row.data
+  }))
+}
+
+/* ----------------------------------
+   UPDATE SYNC STATUS
+---------------------------------- */
+export const updateDistributorsSyncStatus = (ids: string[]) => {
+  if (!ids || ids.length === 0) {
+    return
+  }
+  const placeholders = ids.map(() => '?').join(',')
+  const query = `UPDATE distributors SET isSynced = TRUE WHERE id IN (${placeholders})`
+  db.prepare(query).run(...ids);
+  console.log(`Updated sync status for distributors: ${ids.join(', ')}`)
+}
+
+/* ----------------------------------
    GET SINGLE DISTRIBUTOR BY ID
 ---------------------------------- */
 

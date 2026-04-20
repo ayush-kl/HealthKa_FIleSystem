@@ -1,5 +1,4 @@
 import { db } from "./index"
-import crypto from "crypto"
 
 /* ----------------------------------
    TABLE INIT
@@ -330,3 +329,32 @@ export const deleteCustomer = (id: string) => {
   const result = db.prepare(`DELETE FROM customers WHERE id = ?`).run(id)
   return result.changes > 0
 }
+
+export const getUnsyncedCustomers = () => {
+  const query = `SELECT * FROM customers WHERE isSynced = ?`;
+  const rows = db.prepare(query).all(0);
+
+  return rows.map((row: any) => ({
+    id: row.id,
+    first_name: row.firstName,
+    last_name: row.lastName,
+    phone: row.phone,
+    age: row.age,
+    gender: row.gender,
+    address: row.address,
+    created_at: new Date(row.createdAt).toISOString(),
+    createdAt: row.createdAt,
+    updatedAt: row.updatedAt,
+    data: row.data
+  }));
+};
+
+export const updateCustomersSyncStatus = (ids: string[]) => {
+  if (!ids || ids.length === 0) {
+    return;
+  }
+  const placeholders = ids.map(() => '?').join(',');
+  const query = `UPDATE customers SET isSynced = TRUE WHERE id IN (${placeholders})`;
+  db.prepare(query).run(...ids);
+  console.log(`Updated sync status for customers: ${ids.join(', ')}`);
+};

@@ -187,3 +187,29 @@ export const getReceiveMaterialById = (id: string) => {
     data: JSON.parse(row.data),
   }
 }
+
+export const getUnsyncedReceiveMaterials = () => {
+  const query = `SELECT * FROM receive_material WHERE isSynced = ?`
+  const rows = db.prepare(query).all(0)
+
+  return rows.map((row: any) => ({
+    id: row.id,
+    purchaseId: row.purchaseId,
+    vendorName: row.vendorName,
+    paymentStatus: row.paymentStatus,
+    deliveryStatus: row.deliveryStatus,
+    createdAt: row.createdAt,
+    updatedAt: row.updatedAt,
+    data: JSON.parse(row.data),
+  }))
+}
+
+export const updateReceiveMaterialsSyncStatus = (ids: string[]) => {
+  if (!ids || ids.length === 0) {
+    return
+  }
+  const placeholders = ids.map(() => "?").join(",")
+  const query = `UPDATE receive_material SET isSynced = TRUE WHERE id IN (${placeholders})`
+  db.prepare(query).run(...ids);
+  console.log(`Updated sync status for receive materials: ${ids.join(", ")}`);
+}

@@ -147,3 +147,23 @@ export const getPurchaseOrderById = (id: string) => {
     data: row.data ? JSON.parse(row.data) : null,
   }
 }
+
+export const getUnsyncedPurchaseOrders = () => {
+  const query = `SELECT * FROM purchase_orders WHERE isSynced = ?`;
+  const rows = db.prepare(query).all(0);
+
+  return rows.map((row: any) => ({
+    ...row,
+    data: row.data ? JSON.parse(row.data) : {},
+  }));
+};
+
+export const updatePurchaseOrdersSyncStatus = (ids: string[]) => {
+  if (!ids || ids.length === 0) {
+    return;
+  }
+  const placeholders = ids.map(() => '?').join(',');
+  const query = `UPDATE purchase_orders SET isSynced = TRUE WHERE id IN (${placeholders})`;
+  db.prepare(query).run(...ids);
+  console.log(`Updated sync status for purchase orders: ${ids.join(', ')}`);
+};

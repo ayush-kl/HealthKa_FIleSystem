@@ -136,3 +136,26 @@ export const getAllBillTemplates = (): BillTemplate[] => {
     config: JSON.parse(row.config),
   }))
 }
+
+export const getUnsyncedBillTemplates = (): BillTemplate[] => {
+  const rows = db.prepare(`
+    SELECT * FROM bill_templates
+    WHERE isSynced = 0
+    ORDER BY updatedAt DESC
+  `).all() as any[]
+
+  return rows.map(row => ({
+    ...row,
+    config: JSON.parse(row.config),
+  }))
+}
+
+export const updateBillTemplatesSyncStatus = (ids: string[]) => {
+  if (!ids || ids.length === 0) {
+    return;
+  }
+  const placeholders = ids.map(() => '?').join(',');
+  const query = `UPDATE bill_templates SET isSynced = TRUE WHERE id IN (${placeholders})`;
+  db.prepare(query).run(...ids);
+  console.log(`Updated sync status for bill templates: ${ids.join(', ')}`);
+};
